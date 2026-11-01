@@ -25,5 +25,16 @@ function verifyCSRFToken($token) {
 function e($value) {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
+function statusClass($status) {
+    $classes = [
+        "Pending" => "status-pending",
+        "Under Review" => "status-review",
+        "Processing" => "status-processing",
+        "Ready for Release" => "status-ready",
+        "Completed" => "status-completed",
+        "Rejected" => "status-rejected"
+    ];
 
+    return $classes[$status] ?? "status-default";
+}
 ?>

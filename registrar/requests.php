@@ -4,20 +4,41 @@
 require_once "../config/database.php";
 require_once "../includes/functions.php";
 
-// Check if user is logged in
+// Check registrar access
 if (!isset($_SESSION["user_id"])) {
     header("Location: ../auth/login.php");
     exit;
 }
 
-// Allow registrar accounts only
 if ($_SESSION["role"] !== "registrar") {
     header("Location: ../auth/login.php");
     exit;
 }
 
-// Retrieve all student document requests
-$stmt = $pdo->prepare("
+// Search and filter values
+$search = trim($_GET["search"] ?? "");
+$document_type = $_GET["document_type"] ?? "";
+$status = $_GET["status"] ?? "";
+
+// Available filters
+$document_types = [
+    "Certificate of Enrollment",
+    "Certificate of Grades",
+    "Transcript of Records",
+    "Other"
+];
+
+$statuses = [
+    "Pending",
+    "Under Review",
+    "Processing",
+    "Ready for Release",
+    "Completed",
+    "Rejected"
+];
+
+// Build query conditions
+$sql = "
     SELECT
         dr.id,
         dr.document_type,
@@ -30,10 +51,48 @@ $stmt = $pdo->prepare("
         u.email
     FROM document_requests dr
     INNER JOIN users u ON dr.user_id = u.id
-    ORDER BY dr.submitted_at DESC
-");
+    WHERE 1 = 1
+";
 
-$stmt->execute();
+$params = [];
+
+// Search student name or student ID
+if ($search !== "") {
+    $sql .= "
+        AND (
+            u.full_name LIKE ?
+            OR u.student_id LIKE ?
+        )
+    ";
+
+    $searchValue = "%" . $search . "%";
+
+    $params[] = $searchValue;
+    $params[] = $searchValue;
+}
+
+// Filter document type
+if (in_array($document_type, $document_types, true)) {
+    $sql .= " AND dr.document_type = ?";
+    $params[] = $document_type;
+} else {
+    $document_type = "";
+}
+
+// Filter request status
+if (in_array($status, $statuses, true)) {
+    $sql .= " AND dr.status = ?";
+    $params[] = $status;
+} else {
+    $status = "";
+}
+
+// Latest requests first
+$sql .= " ORDER BY dr.submitted_at DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+
 $requests = $stmt->fetchAll();
 
 ?>
@@ -42,12 +101,14 @@ $requests = $stmt->fetchAll();
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Manage Requests | Re-Connect</title>
 
     <link rel="stylesheet" href="../assets/css/style.css">
+
 </head>
 
 <body>
@@ -72,17 +133,131 @@ $requests = $stmt->fetchAll();
         <h2>Student Document Requests</h2>
 
         <p>
-            Review and manage document requests submitted by students.
+            Search, filter, and manage student document requests.
         </p>
 
     </section>
 
     <section class="section">
 
-        <h3>All Requests</h3>
+        <h3>Search and Filter Requests</h3>
+
+        <form method="GET" action="requests.php">
+
+            <label for="search">
+                Student Name or Student ID
+            </label>
+
+            <br>
+
+            <input
+                type="text"
+                name="search"
+                id="search"
+                placeholder="Enter student name or ID"
+                value="<?= e($search) ?>"
+                style="padding: 10px; width: 100%; max-width: 400px;"
+            >
+
+            <br><br>
+
+            <label for="document_type">
+                Document Type
+            </label>
+
+            <br>
+
+            <select
+                name="document_type"
+                id="document_type"
+                style="padding: 10px; width: 100%; max-width: 400px;"
+            >
+
+                <option value="">All Document Types</option>
+
+                <?php foreach ($document_types as $type): ?>
+
+                    <option
+                        value="<?= e($type) ?>"
+                        <?= $document_type === $type ? "selected" : "" ?>
+                    >
+                        <?= e($type) ?>
+                    </option>
+
+                <?php endforeach; ?>
+
+            </select>
+
+            <br><br>
+
+            <label for="status">
+                Request Status
+            </label>
+
+            <br>
+
+            <select
+                name="status"
+                id="status"
+                style="padding: 10px; width: 100%; max-width: 400px;"
+            >
+
+                <option value="">All Statuses</option>
+
+                <?php foreach ($statuses as $item): ?>
+
+                    <option
+                        value="<?= e($item) ?>"
+                        <?= $status === $item ? "selected" : "" ?>
+                    >
+                        <?= e($item) ?>
+                    </option>
+
+                <?php endforeach; ?>
+
+            </select>
+
+            <br><br>
+
+            <button
+                type="submit"
+                style="
+                    background: #173b63;
+                    color: white;
+                    padding: 11px 20px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                "
+            >
+                Apply Filters
+            </button>
+
+            <a
+                href="requests.php"
+                style="
+                    display: inline-block;
+                    margin-left: 10px;
+                    padding: 11px 20px;
+                    background: #e5e7eb;
+                    color: #333;
+                    text-decoration: none;
+                    border-radius: 5px;
+                "
+            >
+                Reset Filters
+            </a>
+
+        </form>
+
+    </section>
+
+    <section class="section">
+
+        <h3>Request Results</h3>
 
         <p>
-            Total Requests:
+            Matching Requests:
             <strong><?= count($requests) ?></strong>
         </p>
 
@@ -132,8 +307,8 @@ $requests = $stmt->fetchAll();
                             </td>
 
                             <td>
-                                <span class="status">
-                                    <?= e($request["status"]) ?>
+                                <span class="status <?php echo statusClass($request['status']); ?>">
+                                    <?php echo e($request['status']); ?>
                                 </span>
                             </td>
 
@@ -155,7 +330,7 @@ $requests = $stmt->fetchAll();
 
                     <tr>
                         <td colspan="8" class="empty">
-                            No student document requests have been submitted yet.
+                            No matching requests found.
                         </td>
                     </tr>
 

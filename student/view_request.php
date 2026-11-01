@@ -82,136 +82,185 @@ $history = $stmt->fetchAll();
 
 <body>
 
-    <header class="header">
+<header class="header">
 
-        <div>
-            <h1>Re-Connect</h1>
-            <p>Student Document Request and Tracking System</p>
-        </div>
+    <div>
+        <h1>Re-Connect</h1>
+        <p>Student Document Request and Tracking System</p>
+    </div>
 
-        <a href="my_requests.php" style="color: white;">
-            Back to My Requests
-        </a>
+    <a href="my_requests.php" style="color: white;">
+        Back to My Requests
+    </a>
 
-    </header>
+</header>
 
+<main class="container">
 
-    <main class="container">
+    <section class="welcome">
 
-        <section class="section">
+        <h2>Request Details #<?= (int)$request["id"] ?></h2>
 
-            <h2>Request Details #<?= (int)$request["id"] ?></h2>
+        <p>
+            View your document request information and track its progress.
+        </p>
 
-            <br>
+    </section>
 
-            <p><strong>Document Type:</strong>
-                <?= e($request["document_type"]) ?>
+    <!-- Request Information -->
+
+    <section class="section">
+
+        <h3>Document Information</h3>
+
+        <p>
+            <strong>Document Type:</strong>
+            <?= e($request["document_type"]) ?>
+        </p>
+
+        <p>
+            <strong>Quantity:</strong>
+            <?= (int)$request["quantity"] ?>
+        </p>
+
+        <p>
+            <strong>Purpose:</strong>
+            <?= nl2br(e($request["purpose"])) ?>
+        </p>
+
+        <p>
+            <strong>Additional Details:</strong>
+            <?= !empty($request["additional_details"])
+                ? nl2br(e($request["additional_details"]))
+                : "None" ?>
+        </p>
+
+        <p>
+            <strong>Current Status:</strong>
+            <span class="request-current-status status <?php echo statusClass($request['status']); ?>">
+                <?php echo e($request['status']); ?>
+            </span>
+        </p>
+
+        <p>
+            <strong>Date Submitted:</strong>
+            <?= e($request["submitted_at"]) ?>
+        </p>
+
+        <p>
+            <strong>Last Updated:</strong>
+            <?= e($request["updated_at"]) ?>
+        </p>
+
+    </section>
+
+    <!-- Latest Registrar Note -->
+
+    <section class="section">
+
+        <h3>Latest Registrar Note</h3>
+
+        <?php if (!empty($request["registrar_note"])): ?>
+
+            <div class="registrar-note">
+
+                <?= nl2br(e($request["registrar_note"])) ?>
+
+            </div>
+
+        <?php else: ?>
+
+            <p class="empty">
+                No registrar note has been provided yet.
             </p>
 
-            <br>
+        <?php endif; ?>
 
-            <p><strong>Quantity:</strong>
-                <?= (int)$request["quantity"] ?>
-            </p>
+    </section>
 
-            <br>
+    <!-- Request Status Timeline -->
 
-            <p><strong>Purpose:</strong>
-                <?= nl2br(e($request["purpose"])) ?>
-            </p>
+    <section class="section">
 
-            <br>
+        <h3>Request Status History</h3>
 
-            <p><strong>Additional Details:</strong>
-                <?= $request["additional_details"] !== null
-                    ? nl2br(e($request["additional_details"]))
-                    : "None" ?>
-            </p>
+        <p>
+            Follow the progress of your academic document request.
+        </p>
 
-            <br>
+        <div class="timeline">
 
-            <p><strong>Current Status:</strong>
-                <span class="status">
-                    <?= e($request["status"]) ?>
-                </span>
-            </p>
+            <!-- Initial Submission -->
 
-            <br>
+            <div class="timeline-item">
 
-            <p><strong>Date Submitted:</strong>
-                <?= e($request["submitted_at"]) ?>
-            </p>
+                <h4>Pending</h4>
 
-            <br>
+                <p>
+                    Your document request was submitted successfully.
+                </p>
 
-            <p><strong>Last Updated:</strong>
-                <?= e($request["updated_at"]) ?>
-            </p>
-
-        </section>
-
-
-        <br>
-
-
-        <section class="section">
-
-            <h3>Request Status History</h3>
-
-            <br>
-
-            <div style="border-left: 3px solid #173b63; padding-left: 20px;">
-
-                <!-- Initial submission -->
-                <div style="margin-bottom: 25px;">
-
-                    <strong>Pending</strong>
-
-                    <p>
-                        Your document request was submitted successfully.
-                    </p>
-
+                <p>
                     <small>
                         <?= e($request["submitted_at"]) ?>
                     </small>
+                </p>
 
-                </div>
+            </div>
 
+            <!-- Status Changes -->
+
+            <?php if (count($history) > 0): ?>
 
                 <?php foreach ($history as $item): ?>
 
-                    <div style="margin-bottom: 25px;">
+                    <div class="timeline-item">
 
-                        <strong>
+                        <h4>
                             <?= e($item["new_status"]) ?>
-                        </strong>
+                        </h4>
 
                         <p>
-                            Status updated by:
+                            <strong>Previous Status:</strong>
+                            <?= e($item["old_status"]) ?>
+                        </p>
+
+                        <p>
+                            <strong>Updated by:</strong>
                             <?= e($item["changed_by_name"]) ?>
                         </p>
 
                         <?php if (!empty($item["note"])): ?>
 
-                            <p>
-                                Note: <?= e($item["note"]) ?>
-                            </p>
+                            <div class="registrar-note">
+
+                                <strong>Registrar Note:</strong>
+
+                                <p>
+                                    <?= nl2br(e($item["note"])) ?>
+                                </p>
+
+                            </div>
 
                         <?php endif; ?>
 
-                        <small>
-                            <?= e($item["changed_at"]) ?>
-                        </small>
+                        <p>
+                            <small>
+                                <?= e($item["changed_at"]) ?>
+                            </small>
+                        </p>
 
                     </div>
 
                 <?php endforeach; ?>
 
-            </div>
+            <?php endif; ?>
 
-        </section>
+        </div>
 
-    </main>
+    </section>
+
+</main>
 
 </body>
 

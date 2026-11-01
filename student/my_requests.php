@@ -122,9 +122,9 @@ $requests = $stmt->fetchAll();
                                 </td>
 
                                 <td>
-                                    <span class="status">
-                                        <?= e($request["status"]) ?>
-                                    </span>
+                                <span class="status <?php echo statusClass($request['status']); ?>">
+                                    <?php echo e($request['status']); ?>
+                                </span>
                                 </td>
 
                                 <td>
