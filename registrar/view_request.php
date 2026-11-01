@@ -43,8 +43,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $new_status = $_POST["status"] ?? "";
     $registrar_note = trim($_POST["registrar_note"] ?? "");
+    if (strlen($registrar_note) > 2000) {
+    $error = "Registrar note must not exceed 2000 characters.";
+}
 
-    if (!in_array($new_status, $allowed_statuses, true)) {
+    if ($error !== "") {
+
+    // Keep the validation error.
+
+} elseif (!in_array($new_status, $allowed_statuses, true)) {
 
         $error = "Please select a valid request status.";
 
@@ -66,14 +73,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $currentRequest = $checkStmt->fetch();
 
             if (!$currentRequest) {
-
                 throw new Exception("Request not found.");
-
             }
 
             $old_status = $currentRequest["status"];
 
-            // Update the request information
+            // Update request information
             $updateStmt = $pdo->prepare("
                 UPDATE document_requests
                 SET status = ?,
@@ -88,7 +93,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $request_id
             ]);
 
-            // Record status history only when the status changes
+            // Record history only when the status changes
             if ($old_status !== $new_status) {
 
                 $historyStmt = $pdo->prepare("
@@ -110,7 +115,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $new_status,
                     $registrar_note
                 ]);
-
             }
 
             $pdo->commit();
@@ -118,26 +122,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             header("Location: view_request.php?id=" . $request_id . "&updated=1");
             exit;
 
-        } catch (Exception $e) {
-
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-
-            $error = "Unable to update the request. Please try again.";
-
         } catch (PDOException $e) {
 
             if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+             $pdo->rollBack();
             }
 
-            $error = "A database error occurred. Please try again.";
+            error_log("Request update database error: " . $e->getMessage());
 
-        }
+             $error = "A database error occurred. Please try again.";
 
+        } catch (Exception $e) {
+
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
     }
 
+    error_log("Request update error: " . $e->getMessage());
+
+    $error = "Unable to update the request. Please try again.";
+
+        }
+    }
 }
 
 // Retrieve request and student information
@@ -198,230 +204,279 @@ $history = $historyStmt->fetchAll();
 
 <header class="header">
 
-    <div>
+    <div class="header-brand">
         <h1>Re-Connect</h1>
-        <p>Registrar Request Management</p>
+        <p>Registrar Department</p>
     </div>
 
-    <a href="requests.php" style="color: white;">
-        Back to Requests
-    </a>
+    <form class="logout" action="../auth/logout.php" method="POST">
+
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= e(generateCSRFToken()) ?>"
+        >
+
+        <button type="submit">Logout</button>
+
+    </form>
 
 </header>
 
-<main class="container">
+<div class="dashboard-layout">
 
-    <section class="welcome">
+    <!-- Registrar Sidebar -->
+    <aside class="sidebar">
 
-        <h2>Request Details #<?= (int)$request["id"] ?></h2>
+        <nav class="sidebar-nav">
 
-        <p>Review student information and manage the document request.</p>
+            <a href="dashboard.php" class="sidebar-link">
+                Dashboard
+            </a>
 
-    </section>
+            <a href="requests.php" class="sidebar-link active">
+                Manage Requests
+            </a>
 
-    <?php if (isset($_GET["updated"])): ?>
+        </nav>
 
-        <section class="section">
-            <p style="color: green;">
-                Request updated successfully!
+    </aside>
+
+    <!-- Main Content -->
+    <main class="container dashboard-content">
+
+        <section class="welcome">
+
+            <h2>Request Details #<?= (int)$request["id"] ?></h2>
+
+            <p>
+                Review student information and manage the document request.
             </p>
+
         </section>
 
-    <?php endif; ?>
+        <?php if (($_GET["updated"] ?? "") === "1"): ?>
 
-    <?php if ($error !== ""): ?>
-
-        <section class="section">
-            <p style="color: red;">
-                <?= e($error) ?>
-            </p>
-        </section>
-
-    <?php endif; ?>
-
-    <section class="section">
-
-        <h3>Student Information</h3>
-
-        <p><strong>Student Name:</strong>
-            <?= e($request["full_name"]) ?>
-        </p>
-
-        <p><strong>Student ID:</strong>
-            <?= e($request["student_id"] ?? "N/A") ?>
-        </p>
-
-        <p><strong>Email:</strong>
-            <?= e($request["email"]) ?>
-        </p>
-
-    </section>
-
-    <section class="section">
-
-        <h3>Document Request Information</h3>
-
-        <p><strong>Request ID:</strong>
-            #<?= (int)$request["id"] ?>
-        </p>
-
-        <p><strong>Document Type:</strong>
-            <?= e($request["document_type"]) ?>
-        </p>
-
-        <p><strong>Quantity:</strong>
-            <?= (int)$request["quantity"] ?>
-        </p>
-
-        <p><strong>Purpose:</strong>
-            <?= e($request["purpose"]) ?>
-        </p>
-
-        <p><strong>Additional Details:</strong>
-            <?= e($request["additional_details"] ?: "None") ?>
-        </p>
-
-        <p><strong>Date Submitted:</strong>
-            <?= e($request["submitted_at"]) ?>
-        </p>
-
-        <p><strong>Last Updated:</strong>
-            <?= e($request["updated_at"]) ?>
-        </p>
-
-        <p><strong>Current Status:</strong>
-            <span class="status <?php echo statusClass($request['status']); ?>">
-                <?php echo e($request['status']); ?>
-            </span>
-        </p>
-
-    </section>
-
-    <section class="section">
-
-        <h3>Update Request Status</h3>
-
-        <form method="POST">
-
-            <input
-                type="hidden"
-                name="csrf_token"
-                value="<?= e(generateCSRFToken()) ?>"
-            >
-
-            <label for="status">
-                <strong>Select New Status:</strong>
-            </label>
-
-            <br><br>
-
-            <select
-                name="status"
-                id="status"
-                required
-                style="padding: 10px; width: 100%; max-width: 400px;"
-            >
-
-                <?php foreach ($allowed_statuses as $status): ?>
-
-                    <option
-                        value="<?= e($status) ?>"
-                        <?= $request["status"] === $status ? "selected" : "" ?>
-                    >
-                        <?= e($status) ?>
-                    </option>
-
-                <?php endforeach; ?>
-
-            </select>
-
-            <br><br>
-
-            <label for="registrar_note">
-                <strong>Registrar Note:</strong>
-            </label>
-
-            <br><br>
-
-            <textarea
-                name="registrar_note"
-                id="registrar_note"
-                rows="4"
-                style="width: 100%; max-width: 600px; padding: 10px;"
-                placeholder="Enter a note for this request..."
-            ><?= e($request["registrar_note"] ?? "") ?></textarea>
-
-            <br><br>
-
-            <button
-                type="submit"
-                style="
-                    background: #173b63;
-                    color: white;
-                    padding: 12px 20px;
-                    border: none;
-                    border-radius: 5px;
-                    cursor: pointer;
-                "
-            >
-                Save Changes
-            </button>
-
-        </form>
-
-    </section>
-
-    <section class="section">
-
-        <h3>Request Status History</h3>
-
-        <p>
-            <strong>Initial Status:</strong> Pending
-            <br>
-            <small><?= e($request["submitted_at"]) ?></small>
-        </p>
-
-        <?php if (count($history) > 0): ?>
-
-            <?php foreach ($history as $item): ?>
-
-                <hr>
-
-                <p>
-                    <strong>
-                        <?= e($item["old_status"]) ?>
-                        &rarr;
-                        <?= e($item["new_status"]) ?>
-                    </strong>
+            <section class="section">
+                <p style="color: green;">
+                    Request updated successfully!
                 </p>
-
-                <p>
-                    Updated by:
-                    <?= e($item["changed_by_name"]) ?>
-                </p>
-
-                <p>
-                    Note:
-                    <?= e($item["note"] ?: "No note provided") ?>
-                </p>
-
-                <small>
-                    <?= e($item["changed_at"]) ?>
-                </small>
-
-            <?php endforeach; ?>
-
-        <?php else: ?>
-
-            <p class="empty">
-                No status changes have been recorded yet.
-            </p>
+            </section>
 
         <?php endif; ?>
 
-    </section>
+        <?php if ($error !== ""): ?>
 
-</main>
+            <section class="section">
+                <p style="color: red;">
+                    <?= e($error) ?>
+                </p>
+            </section>
+
+        <?php endif; ?>
+
+        <!-- Student Information -->
+        <section class="section">
+
+            <h3>Student Information</h3>
+
+            <p>
+                <strong>Student Name:</strong>
+                <?= e($request["full_name"]) ?>
+            </p>
+
+            <p>
+                <strong>Student ID:</strong>
+                <?= e($request["student_id"] ?? "N/A") ?>
+            </p>
+
+            <p>
+                <strong>Email:</strong>
+                <?= e($request["email"]) ?>
+            </p>
+
+        </section>
+
+        <!-- Document Request Information -->
+        <section class="section">
+
+            <h3>Document Request Information</h3>
+
+            <p>
+                <strong>Request ID:</strong>
+                #<?= (int)$request["id"] ?>
+            </p>
+
+            <p>
+                <strong>Document Type:</strong>
+                <?= e($request["document_type"]) ?>
+            </p>
+
+            <p>
+                <strong>Quantity:</strong>
+                <?= (int)$request["quantity"] ?>
+            </p>
+
+            <p>
+                <strong>Purpose:</strong>
+                <?= e($request["purpose"]) ?>
+            </p>
+
+            <p>
+                <strong>Additional Details:</strong>
+                <?= e($request["additional_details"] ?: "None") ?>
+            </p>
+
+            <p>
+                <strong>Date Submitted:</strong>
+                <?= e($request["submitted_at"]) ?>
+            </p>
+
+            <p>
+                <strong>Last Updated:</strong>
+                <?= e($request["updated_at"]) ?>
+            </p>
+
+            <p>
+                <strong>Current Status:</strong>
+
+                <span class="status <?= e(statusClass($request["status"])) ?>">
+                    <?= e($request["status"]) ?>
+                </span>
+            </p>
+
+        </section>
+
+        <!-- Update Request Status -->
+        <section class="section">
+
+            <h3>Update Request Status</h3>
+
+            <form method="POST">
+
+                <input
+                    type="hidden"
+                    name="csrf_token"
+                    value="<?= e(generateCSRFToken()) ?>"
+                >
+
+                <label for="status">
+                    <strong>Select New Status:</strong>
+                </label>
+
+                <br><br>
+
+                <select
+                    name="status"
+                    id="status"
+                    required
+                    style="padding: 10px; width: 100%; max-width: 400px;"
+                >
+
+                    <?php foreach ($allowed_statuses as $status): ?>
+
+                        <option
+                            value="<?= e($status) ?>"
+                            <?= $request["status"] === $status ? "selected" : "" ?>
+                        >
+                            <?= e($status) ?>
+                        </option>
+
+                    <?php endforeach; ?>
+
+                </select>
+
+                <br><br>
+
+                <label for="registrar_note">
+                    <strong>Registrar Note:</strong>
+                </label>
+
+                <br><br>
+
+                <textarea
+                    name="registrar_note"
+                    id="registrar_note"
+                    rows="4"
+                    maxlength="2000"
+                    style="width: 100%; max-width: 600px; padding: 10px;"
+                    placeholder="Enter a note for this request..."
+                ><?= e($request["registrar_note"] ?? "") ?></textarea>
+
+                <br><br>
+
+                <button
+                    type="submit"
+                    style="
+                        background: #173b63;
+                        color: white;
+                        padding: 12px 20px;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    "
+                >
+                    Save Changes
+                </button>
+
+            </form>
+
+        </section>
+
+        <!-- Request Status History -->
+        <section class="section">
+
+            <h3>Request Status History</h3>
+
+            <p>
+                <strong>Initial Status:</strong> Pending
+                <br>
+                <small><?= e($request["submitted_at"]) ?></small>
+            </p>
+
+            <?php if (count($history) > 0): ?>
+
+                <?php foreach ($history as $item): ?>
+
+                    <hr>
+
+                    <p>
+                        <strong>
+                            <?= e($item["old_status"]) ?>
+                            &rarr;
+                            <?= e($item["new_status"]) ?>
+                        </strong>
+                    </p>
+
+                    <p>
+                        Updated by:
+                        <?= e($item["changed_by_name"]) ?>
+                    </p>
+
+                    <p>
+                        Note:
+                        <?= e($item["note"] ?: "No note provided") ?>
+                    </p>
+
+                    <small>
+                        <?= e($item["changed_at"]) ?>
+                    </small>
+
+                <?php endforeach; ?>
+
+            <?php else: ?>
+
+                <p class="empty">
+                    No status changes have been recorded yet.
+                </p>
+
+            <?php endif; ?>
+
+        </section>
+
+    </main>
+
+</div>
 
 </body>
 </html>

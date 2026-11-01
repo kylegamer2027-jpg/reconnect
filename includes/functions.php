@@ -18,7 +18,8 @@ function generateCSRFToken() {
 // Verify submitted CSRF token
 function verifyCSRFToken($token) {
     return isset($_SESSION['csrf_token']) &&
-           hash_equals($_SESSION['csrf_token'], $token);
+           is_string($token) &&
+             hash_equals($_SESSION['csrf_token'], $token);
 }
 
 // Safely display text in HTML

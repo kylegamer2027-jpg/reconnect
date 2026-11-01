@@ -28,7 +28,6 @@ $document_types = [
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    // Verify CSRF token
     if (!verifyCSRFToken($_POST["csrf_token"] ?? "")) {
 
         $error = "Invalid request. Please refresh the page.";
@@ -45,14 +44,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_POST["additional_details"] ?? ""
         );
 
-        // Validate document type
         if (!in_array($document_type, $document_types, true)) {
 
             $error = "Please select a valid document type.";
 
-        } elseif ($quantity === false || $quantity < 1) {
+        } elseif ($quantity === false || $quantity < 1 || $quantity > 10) {
 
-            $error = "Please enter a valid quantity.";
+            $error = "Quantity must be between 1 and 10.";
 
         } elseif ($purpose === "") {
 
@@ -69,7 +67,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             try {
 
-                // Save request to database
                 $stmt = $pdo->prepare("
                     INSERT INTO document_requests
                     (
@@ -92,10 +89,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         : null
                 ]);
 
-                // Get the new request ID
                 $request_id = $pdo->lastInsertId();
 
-                // Redirect after successful submission
                 header(
                     "Location: request_document.php?submitted=1&id=" .
                     $request_id
@@ -129,7 +124,6 @@ $request_id = filter_var(
 <head>
 
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Request Document | Re-Connect</title>
@@ -140,165 +134,187 @@ $request_id = filter_var(
 
 <body>
 
+    <!-- Header -->
     <header class="header">
 
-        <div>
+        <div class="header-brand">
             <h1>Re-Connect</h1>
             <p>Student Document Request and Tracking System</p>
         </div>
 
-        <a href="dashboard.php" style="color: white;">
-            Back to Dashboard
-        </a>
+        <form class="logout" action="../auth/logout.php" method="POST">
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= e(generateCSRFToken()) ?>"
+            >
+
+            <button type="submit">Logout</button>
+
+        </form>
 
     </header>
 
+    <!-- Dashboard Layout -->
+    <div class="dashboard-layout">
 
-    <main class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
 
-        <section class="section">
+            <nav class="sidebar-nav">
 
-            <h2>Request Academic Document</h2>
-
-            <p style="margin: 12px 0 20px; color: #666;">
-                Complete the form below to submit your document request.
-            </p>
-
-
-            <?php if ($submitted && $request_id): ?>
-
-                <div style="
-                    background: #e8f5e9;
-                    color: #216b35;
-                    padding: 15px;
-                    border-radius: 6px;
-                    margin-bottom: 20px;
-                ">
-
-                    <strong>Request submitted successfully!</strong>
-
-                    <p>
-                        Your Request ID is:
-                        <strong>#<?= (int)$request_id ?></strong>
-                    </p>
-
-                    <p>
-                        Your request status is Pending.
-                    </p>
-
-                </div>
-
-                <a href="dashboard.php">Return to Dashboard</a>
-
-                <br><br>
-
-                <a href="request_document.php">
-                    Submit Another Request
+                <a href="dashboard.php" class="sidebar-link">
+                    Dashboard
                 </a>
 
+                <a href="request_document.php" class="sidebar-link active">
+                    Request Document
+                </a>
 
-            <?php else: ?>
+                <a href="my_requests.php" class="sidebar-link">
+                    My Requests
+                </a>
 
+            </nav>
 
-                <?php if ($error !== ""): ?>
+        </aside>
 
-                    <p style="color: red; margin-bottom: 15px;">
-                        <?= e($error) ?>
-                    </p>
+        <!-- Main Content -->
+        <main class="container dashboard-content">
+
+            <section class="section">
+
+                <h2>Request Academic Document</h2>
+
+                <p style="margin: 12px 0 20px; color: #666;">
+                    Complete the form below to submit your document request.
+                </p>
+
+                <?php if ($submitted && $request_id): ?>
+
+                    <div style="
+                        background: #e8f5e9;
+                        color: #216b35;
+                        padding: 15px;
+                        border-radius: 6px;
+                        margin-bottom: 20px;
+                    ">
+
+                        <strong>Request submitted successfully!</strong>
+
+                        <p>
+                            Your Request ID is:
+                            <strong>#<?= (int)$request_id ?></strong>
+                        </p>
+
+                        <p>
+                            Your request status is Pending.
+                        </p>
+
+                    </div>
+
+                    <a href="request_document.php">
+                        Submit Another Request
+                    </a>
+
+                    <br><br>
+
+                    <a href="my_requests.php">
+                        View My Requests
+                    </a>
+
+                <?php else: ?>
+
+                    <?php if ($error !== ""): ?>
+
+                        <p style="color: red; margin-bottom: 15px;">
+                            <?= e($error) ?>
+                        </p>
+
+                    <?php endif; ?>
+
+                    <form method="POST" action="">
+
+                        <input
+                            type="hidden"
+                            name="csrf_token"
+                            value="<?= e($csrf_token) ?>"
+                        >
+
+                        <label>Document Type</label>
+                        <br>
+
+                        <select name="document_type" required>
+
+                            <option value="">Select Document Type</option>
+
+                            <?php foreach ($document_types as $type): ?>
+
+                                <option
+                                    value="<?= e($type) ?>"
+                                    <?= (
+                                        ($_POST["document_type"] ?? "") === $type
+                                    ) ? "selected" : "" ?>
+                                >
+                                    <?= e($type) ?>
+                                </option>
+
+                            <?php endforeach; ?>
+
+                        </select>
+
+                        <br><br>
+
+                        <label>Quantity</label>
+                        <br>
+
+                        <input
+                            type="number"
+                            name="quantity"
+                            min="1"
+                            value="<?= e($_POST["quantity"] ?? "1") ?>"
+                            required
+                        >
+
+                        <br><br>
+
+                        <label>Purpose of Request</label>
+                        <br>
+
+                        <textarea
+                            name="purpose"
+                            rows="4"
+                            required
+                            placeholder="Explain why you need this document."
+                        ><?= e($_POST["purpose"] ?? "") ?></textarea>
+
+                        <br><br>
+
+                        <label>Additional Details</label>
+                        <br>
+
+                        <textarea
+                            name="additional_details"
+                            rows="4"
+                            placeholder="If you selected Other, specify the document here."
+                        ><?= e($_POST["additional_details"] ?? "") ?></textarea>
+
+                        <br><br>
+
+                        <button type="submit">
+                            Submit Document Request
+                        </button>
+
+                    </form>
 
                 <?php endif; ?>
 
+            </section>
 
-                <form method="POST" action="">
+        </main>
 
-                    <input
-                        type="hidden"
-                        name="csrf_token"
-                        value="<?= e($csrf_token) ?>"
-                    >
-
-
-                    <label>Document Type</label>
-
-                    <br>
-
-                    <select name="document_type" required>
-
-                        <option value="">Select Document Type</option>
-
-                        <?php foreach ($document_types as $type): ?>
-
-                            <option
-                                value="<?= e($type) ?>"
-                                <?= (
-                                    ($_POST["document_type"] ?? "") === $type
-                                ) ? "selected" : "" ?>
-                            >
-                                <?= e($type) ?>
-                            </option>
-
-                        <?php endforeach; ?>
-
-                    </select>
-
-                    <br><br>
-
-
-                    <label>Quantity</label>
-
-                    <br>
-
-                    <input
-                        type="number"
-                        name="quantity"
-                        min="1"
-                        value="<?= e($_POST["quantity"] ?? "1") ?>"
-                        required
-                    >
-
-                    <br><br>
-
-
-                    <label>Purpose of Request</label>
-
-                    <br>
-
-                    <textarea
-                        name="purpose"
-                        rows="4"
-                        required
-                        placeholder="Explain why you need this document."
-                    ><?= e($_POST["purpose"] ?? "") ?></textarea>
-
-                    <br><br>
-
-
-                    <label>Additional Details</label>
-
-                    <br>
-
-                    <textarea
-                        name="additional_details"
-                        rows="4"
-                        placeholder="If you selected Other, specify the document here."
-                    ><?= e($_POST["additional_details"] ?? "") ?></textarea>
-
-                    <br><br>
-
-
-                    <button type="submit">
-                        Submit Document Request
-                    </button>
-
-                </form>
-
-
-            <?php endif; ?>
-
-        </section>
-
-    </main>
+    </div>
 
 </body>
-
 </html>

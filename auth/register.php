@@ -20,20 +20,37 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $password = $_POST["password"] ?? "";
         $confirm_password = $_POST["confirm_password"] ?? "";
 
+        
         // Validate required fields
-        if ($full_name === "" || $email === "" || $password === "") {
-            $error = "Please complete all required fields.";
+if ($full_name === "" || $email === "" || $password === "" || $confirm_password === "") {
 
-        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $error = "Please enter a valid email address.";
+    $error = "Please complete all required fields.";
 
-        } elseif (strlen($password) < 8) {
-            $error = "Password must be at least 8 characters.";
+} elseif (strlen($student_id) > 50) {
 
-        } elseif ($password !== $confirm_password) {
-            $error = "Passwords do not match.";
+    $error = "Student ID is too long.";
 
-        } else {
+} elseif (strlen($full_name) > 150) {
+
+    $error = "Full name must not exceed 150 characters.";
+
+} elseif (strlen($email) > 150) {
+
+    $error = "Email address is too long.";
+
+} elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+    $error = "Please enter a valid email address.";
+
+} elseif (strlen($password) < 8) {
+
+    $error = "Password must be at least 8 characters.";
+
+} elseif ($password !== $confirm_password) {
+
+    $error = "Passwords do not match.";
+
+} else {
 
             try {
 
@@ -96,6 +113,7 @@ $csrf_token = generateCSRFToken();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Registration | Re-Connect</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 
 <body>

@@ -65,30 +65,52 @@ $recent_requests = $stmt->fetchAll();
 
 <body>
 
-    <!-- Header -->
-    <header class="header">
+   <!-- Header -->
+<header class="header">
 
-        <div>
-            <h1>Re-Connect</h1>
-            <p>Student Document Request and Tracking System</p>
-        </div>
+    <div class="header-brand">
+        <h1>Re-Connect</h1>
+        <p>Student Document Request and Tracking System</p>
+    </div>
 
-        <form class="logout" action="../auth/logout.php" method="POST">
+    <form class="logout" action="../auth/logout.php" method="POST">
 
-            <input
-                type="hidden"
-                name="csrf_token"
-                value="<?= e(generateCSRFToken()) ?>"
-            >
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= e(generateCSRFToken()) ?>"
+        >
 
-            <button type="submit">Logout</button>
+        <button type="submit">Logout</button>
 
-        </form>
+    </form>
 
-    </header>
+</header>
 
 
-    <main class="container">
+    <div class="dashboard-layout">
+
+    <aside class="sidebar">
+
+        <nav class="sidebar-nav">
+
+            <a href="dashboard.php" class="sidebar-link active">
+                <span>Dashboard</span>
+            </a>
+
+            <a href="request_document.php" class="sidebar-link">
+                <span>Request Document</span>
+            </a>
+
+            <a href="my_requests.php" class="sidebar-link">
+                <span>My Requests</span>
+            </a>
+
+        </nav>
+
+    </aside>
+
+    <main class="container dashboard-content">
 
         <!-- Welcome Section -->
         <section class="welcome">
@@ -96,32 +118,7 @@ $recent_requests = $stmt->fetchAll();
             <h2>
                 Welcome, <?= e($_SESSION["full_name"]) ?>!
             </h2>
-<br>
 
-<a href="request_document.php"
-   style="
-       display: inline-block;
-       background: #173b63;
-       color: white;
-       padding: 12px 20px;
-       text-decoration: none;
-       border-radius: 5px;
-   ">
-    + Request Academic Document
-</a>
-<a href="my_requests.php"
-   style="
-       display: inline-block;
-       background: #173b63;
-       color: white;
-       padding: 12px 20px;
-       text-decoration: none;
-       border-radius: 5px;
-       margin-left: 10px;
-   ">
-    My Document Requests
-</a>
-<br><br>
             <p>
                 Monitor your academic document requests through your dashboard.
             </p>
@@ -237,6 +234,8 @@ $recent_requests = $stmt->fetchAll();
         </section>
 
     </main>
+    
+</div>
 
 </body>
 </html>

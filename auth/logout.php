@@ -36,6 +36,9 @@ if (ini_get("session.use_cookies")) {
 
 // Destroy session
 session_destroy();
+session_start();
+session_regenerate_id(true);
+session_write_close();
 
 // Return to login
 header("Location: login.php");

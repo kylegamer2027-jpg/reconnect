@@ -19,12 +19,12 @@ if ($_SESSION["role"] !== "registrar") {
 $statsStmt = $pdo->query("
     SELECT
         COUNT(*) AS total_requests,
-        SUM(status = 'Pending') AS pending_requests,
-        SUM(status = 'Under Review') AS under_review,
-        SUM(status = 'Processing') AS processing,
-        SUM(status = 'Ready for Release') AS ready_requests,
-        SUM(status = 'Completed') AS completed_requests,
-        SUM(status = 'Rejected') AS rejected_requests
+        COALESCE(SUM(status = 'Pending'), 0) AS pending_requests,
+        COALESCE(SUM(status = 'Under Review'), 0) AS under_review,
+        COALESCE(SUM(status = 'Processing'), 0) AS processing,
+        COALESCE(SUM(status = 'Ready for Release'), 0) AS ready_requests,
+        COALESCE(SUM(status = 'Completed'), 0) AS completed_requests,
+        COALESCE(SUM(status = 'Rejected'), 0) AS rejected_requests
     FROM document_requests
 ");
 
@@ -57,9 +57,7 @@ foreach ($statusLabels as $label) {
 
 // Get document type report
 $typeStmt = $pdo->query("
-    SELECT
-        document_type,
-        COUNT(*) AS total
+    SELECT document_type, COUNT(*) AS total
     FROM document_requests
     GROUP BY document_type
     ORDER BY total DESC
@@ -67,10 +65,9 @@ $typeStmt = $pdo->query("
 
 $typeReports = $typeStmt->fetchAll();
 
-// Get maximum status count for chart width
+// Get maximum counts for chart widths
 $maxStatusCount = max(1, ...array_values($statusCounts));
 
-// Get maximum document type count for chart width
 $typeCounts = array_map(
     fn($item) => (int)$item["total"],
     $typeReports
@@ -78,7 +75,7 @@ $typeCounts = array_map(
 
 $maxTypeCount = max(1, ...$typeCounts);
 
-// Get the five most recent requests
+// Get five most recent requests
 $recentStmt = $pdo->query("
     SELECT
         dr.id,
@@ -88,7 +85,7 @@ $recentStmt = $pdo->query("
         u.full_name
     FROM document_requests dr
     INNER JOIN users u ON dr.user_id = u.id
-    ORDER BY dr.submitted_at DESC
+    ORDER BY dr.submitted_at DESC, dr.id DESC
     LIMIT 5
 ");
 
@@ -100,196 +97,157 @@ $recentRequests = $recentStmt->fetchAll();
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Registrar Dashboard | Re-Connect</title>
-
     <link rel="stylesheet" href="../assets/css/style.css">
-
 </head>
 
 <body>
 
 <header class="header">
 
-    <div>
+    <div class="header-brand">
         <h1>Re-Connect</h1>
-        <p>Registrar Dashboard</p>
+        <p>Registrar Department</p>
     </div>
 
-    <form action="../auth/logout.php" method="POST">
-
+    <form class="logout" action="../auth/logout.php" method="POST">
         <input
             type="hidden"
             name="csrf_token"
             value="<?= e(generateCSRFToken()) ?>"
         >
 
-        <button type="submit">
-            Logout
-        </button>
-
+        <button type="submit">Logout</button>
     </form>
 
 </header>
 
-<main class="container">
+<div class="dashboard-layout">
 
-    <!-- Welcome Section -->
+    <!-- Registrar Sidebar -->
+    <aside class="sidebar">
 
-    <section class="welcome">
+        <nav class="sidebar-nav">
 
-        <h2>
-            Welcome, <?= e($_SESSION["full_name"]) ?>!
-        </h2>
+            <a href="dashboard.php" class="sidebar-link active">
+                Dashboard
+            </a>
 
-        <p>
-            Manage student document requests and monitor their progress.
-        </p>
+            <a href="requests.php" class="sidebar-link">
+                Manage Requests
+            </a>
 
-        <a href="requests.php"
-           style="
-               display: inline-block;
-               background: #173b63;
-               color: white;
-               padding: 12px 20px;
-               text-decoration: none;
-               border-radius: 5px;
-           ">
-            Manage Student Requests
-        </a>
+        </nav>
 
-    </section>
+    </aside>
 
-    <!-- Request Statistics -->
+    <!-- Dashboard Content -->
+    <main class="container dashboard-content">
 
-    <section class="section">
+        <!-- Welcome Section -->
+        <section class="welcome">
 
-        <h3>Request Statistics</h3>
-
-        <div class="dashboard-cards">
-
-            <div class="card">
-                <h3>Total Requests</h3>
-                <p><?= (int)$stats["total_requests"] ?></p>
-            </div>
-
-            <div class="card">
-                <h3>Pending</h3>
-                <p><?= (int)$stats["pending_requests"] ?></p>
-            </div>
-
-            <div class="card">
-                <h3>Under Review</h3>
-                <p><?= (int)$stats["under_review"] ?></p>
-            </div>
-
-            <div class="card">
-                <h3>Processing</h3>
-                <p><?= (int)$stats["processing"] ?></p>
-            </div>
-
-            <div class="card">
-                <h3>Ready for Release</h3>
-                <p><?= (int)$stats["ready_requests"] ?></p>
-            </div>
-
-            <div class="card">
-                <h3>Completed</h3>
-                <p><?= (int)$stats["completed_requests"] ?></p>
-            </div>
-
-            <div class="card">
-                <h3>Rejected</h3>
-                <p><?= (int)$stats["rejected_requests"] ?></p>
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- Reports and Charts -->
-
-    <section class="section">
-
-        <h3>Request Reports and Analytics</h3>
-
-        <div class="report-total">
-
-            <h3>Total Student Requests</h3>
+            <h2>
+                Welcome, <?= e($_SESSION["full_name"]) ?>!
+            </h2>
 
             <p>
-                <?= (int)$stats["total_requests"] ?>
+                Manage student document requests and monitor their progress.
             </p>
 
-        </div>
+            <a href="requests.php"
+               style="
+                   display: inline-block;
+                   background: #173b63;
+                   color: white;
+                   padding: 12px 20px;
+                   text-decoration: none;
+                   border-radius: 5px;
+               ">
+                Manage Student Requests
+            </a>
 
-        <div class="report-grid">
+        </section>
 
-            <!-- Status Report -->
+        <!-- Request Statistics -->
+        <section class="section">
 
-            <div class="report-card">
+            <h3>Request Statistics</h3>
 
-                <h3>Requests by Status</h3>
+            <div class="dashboard-cards">
 
-                <?php foreach ($statusCounts as $label => $count): ?>
+                <div class="card">
+                    <h3>Total Requests</h3>
+                    <p><?= (int)$stats["total_requests"] ?></p>
+                </div>
 
-                    <?php
-                        $percentage = ($count / $maxStatusCount) * 100;
-                    ?>
+                <div class="card">
+                    <h3>Pending</h3>
+                    <p><?= (int)$stats["pending_requests"] ?></p>
+                </div>
 
-                    <div class="chart-item">
+                <div class="card">
+                    <h3>Under Review</h3>
+                    <p><?= (int)$stats["under_review"] ?></p>
+                </div>
 
-                        <div class="chart-label">
+                <div class="card">
+                    <h3>Processing</h3>
+                    <p><?= (int)$stats["processing"] ?></p>
+                </div>
 
-                            <span><?= e($label) ?></span>
+                <div class="card">
+                    <h3>Ready for Release</h3>
+                    <p><?= (int)$stats["ready_requests"] ?></p>
+                </div>
 
-                            <strong><?= $count ?></strong>
+                <div class="card">
+                    <h3>Completed</h3>
+                    <p><?= (int)$stats["completed_requests"] ?></p>
+                </div>
 
-                        </div>
-
-                        <div class="chart-track">
-
-                            <div
-                                class="chart-bar"
-                                style="width: <?= $percentage ?>%;"
-                            ></div>
-
-                        </div>
-
-                    </div>
-
-                <?php endforeach; ?>
+                <div class="card">
+                    <h3>Rejected</h3>
+                    <p><?= (int)$stats["rejected_requests"] ?></p>
+                </div>
 
             </div>
 
-            <!-- Document Type Report -->
+        </section>
 
-            <div class="report-card">
+        <!-- Reports and Charts -->
+        <section class="section">
 
-                <h3>Requests by Document Type</h3>
+            <h3>Request Reports and Analytics</h3>
 
-                <?php if (count($typeReports) > 0): ?>
+            <div class="report-total">
 
-                    <?php foreach ($typeReports as $item): ?>
+                <h3>Total Student Requests</h3>
+
+                <p><?= (int)$stats["total_requests"] ?></p>
+
+            </div>
+
+            <div class="report-grid">
+
+                <!-- Status Report -->
+                <div class="report-card">
+
+                    <h3>Requests by Status</h3>
+
+                    <?php foreach ($statusCounts as $label => $count): ?>
 
                         <?php
-                            $count = (int)$item["total"];
-                            $percentage = ($count / $maxTypeCount) * 100;
+                            $percentage = ($count / $maxStatusCount) * 100;
                         ?>
 
                         <div class="chart-item">
 
                             <div class="chart-label">
-
-                                <span>
-                                    <?= e($item["document_type"]) ?>
-                                </span>
-
+                                <span><?= e($label) ?></span>
                                 <strong><?= $count ?></strong>
-
                             </div>
 
                             <div class="chart-track">
@@ -305,98 +263,138 @@ $recentRequests = $recentStmt->fetchAll();
 
                     <?php endforeach; ?>
 
-                <?php else: ?>
+                </div>
 
-                    <p class="empty">
-                        No document requests available for reporting.
-                    </p>
+                <!-- Document Type Report -->
+                <div class="report-card">
 
-                <?php endif; ?>
+                    <h3>Requests by Document Type</h3>
+
+                    <?php if (count($typeReports) > 0): ?>
+
+                        <?php foreach ($typeReports as $item): ?>
+
+                            <?php
+                                $count = (int)$item["total"];
+                                $percentage = ($count / $maxTypeCount) * 100;
+                            ?>
+
+                            <div class="chart-item">
+
+                                <div class="chart-label">
+
+                                    <span>
+                                        <?= e($item["document_type"]) ?>
+                                    </span>
+
+                                    <strong><?= $count ?></strong>
+
+                                </div>
+
+                                <div class="chart-track">
+
+                                    <div
+                                        class="chart-bar"
+                                        style="width: <?= $percentage ?>%;"
+                                    ></div>
+
+                                </div>
+
+                            </div>
+
+                        <?php endforeach; ?>
+
+                    <?php else: ?>
+
+                        <p class="empty">
+                            No document requests available for reporting.
+                        </p>
+
+                    <?php endif; ?>
+
+                </div>
 
             </div>
 
-        </div>
+        </section>
 
-    </section>
+        <!-- Recent Requests -->
+        <section class="section">
 
-    <!-- Recent Requests -->
+            <h3>Recently Submitted Requests</h3>
 
-    <section class="section">
+            <table>
 
-        <h3>Recently Submitted Requests</h3>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Student Name</th>
+                        <th>Document Type</th>
+                        <th>Status</th>
+                        <th>Date Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
 
-        <table>
+                <tbody>
 
-            <thead>
+                    <?php if (count($recentRequests) > 0): ?>
 
-                <tr>
-                    <th>Request ID</th>
-                    <th>Student Name</th>
-                    <th>Document Type</th>
-                    <th>Status</th>
-                    <th>Date Submitted</th>
-                    <th>Action</th>
-                </tr>
+                        <?php foreach ($recentRequests as $request): ?>
 
-            </thead>
+                            <tr>
 
-            <tbody>
+                                <td>
+                                    #<?= (int)$request["id"] ?>
+                                </td>
 
-                <?php if (count($recentRequests) > 0): ?>
+                                <td>
+                                    <?= e($request["full_name"]) ?>
+                                </td>
 
-                    <?php foreach ($recentRequests as $request): ?>
+                                <td>
+                                    <?= e($request["document_type"]) ?>
+                                </td>
+
+                                <td>
+                                    <span class="status <?= e(statusClass($request["status"])) ?>">
+                                        <?= e($request["status"]) ?>
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <?= e($request["submitted_at"]) ?>
+                                </td>
+
+                                <td>
+                                    <a href="view_request.php?id=<?= (int)$request["id"] ?>">
+                                        View Request
+                                    </a>
+                                </td>
+
+                            </tr>
+
+                        <?php endforeach; ?>
+
+                    <?php else: ?>
 
                         <tr>
-
-                            <td>
-                                #<?= (int)$request["id"] ?>
+                            <td colspan="6" class="empty">
+                                No student requests available.
                             </td>
-
-                            <td>
-                                <?= e($request["full_name"]) ?>
-                            </td>
-
-                            <td>
-                                <?= e($request["document_type"]) ?>
-                            </td>
-
-                            <td>
-                                <span class="status">
-                                    <?= e($request["status"]) ?>
-                                </span>
-                            </td>
-
-                            <td>
-                                <?= e($request["submitted_at"]) ?>
-                            </td>
-
-                            <td>
-                                <a href="view_request.php?id=<?= (int)$request["id"] ?>">
-                                    View Request
-                                </a>
-                            </td>
-
                         </tr>
 
-                    <?php endforeach; ?>
+                    <?php endif; ?>
 
-                <?php else: ?>
+                </tbody>
 
-                    <tr>
-                        <td colspan="6" class="empty">
-                            No student requests available.
-                        </td>
-                    </tr>
+            </table>
 
-                <?php endif; ?>
+        </section>
 
-            </tbody>
+    </main>
 
-        </table>
-
-    </section>
-
-</main>
+</div>
 
 </body>
 </html>

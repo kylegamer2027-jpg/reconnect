@@ -40,6 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 // Prevent session fixation
                 session_regenerate_id(true);
+                $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
 
                 // Store user information in session
                 $_SESSION["user_id"] = $user["id"];
@@ -81,6 +82,7 @@ $csrf_token = generateCSRFToken();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Login | Re-Connect</title>
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 
 <body>

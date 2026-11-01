@@ -55,111 +55,145 @@ $requests = $stmt->fetchAll();
 
 <body>
 
+    <!-- Header -->
     <header class="header">
 
-        <div>
+        <div class="header-brand">
             <h1>Re-Connect</h1>
             <p>Student Document Request and Tracking System</p>
         </div>
 
-        <a href="dashboard.php" style="color: white;">
-            Back to Dashboard
-        </a>
+        <form class="logout" action="../auth/logout.php" method="POST">
+
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= e(generateCSRFToken()) ?>"
+            >
+
+            <button type="submit">Logout</button>
+
+        </form>
 
     </header>
 
+    <!-- Dashboard Layout -->
+    <div class="dashboard-layout">
 
-    <main class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
 
-        <section class="welcome">
+            <nav class="sidebar-nav">
 
-            <h2>My Document Requests</h2>
+                <a href="dashboard.php" class="sidebar-link">
+                    Dashboard
+                </a>
 
-            <p>
-                View and monitor the status of your submitted academic documents.
-            </p>
+                <a href="request_document.php" class="sidebar-link">
+                    Request Document
+                </a>
 
-        </section>
+                <a href="my_requests.php" class="sidebar-link active">
+                    My Requests
+                </a>
 
+            </nav>
 
-        <section class="section">
+        </aside>
 
-            <h3>Request List</h3>
+        <!-- Main Content -->
+        <main class="container dashboard-content">
 
-            <table>
+            <section class="welcome">
 
-                <thead>
+                <h2>My Document Requests</h2>
 
-                    <tr>
-                        <th>Request ID</th>
-                        <th>Document Type</th>
-                        <th>Quantity</th>
-                        <th>Status</th>
-                        <th>Date Submitted</th>
-                        <th>Action</th>
-                    </tr>
+                <p>
+                    View and monitor the status of your submitted academic documents.
+                </p>
 
-                </thead>
+            </section>
 
-                <tbody>
+            <section class="section">
 
-                    <?php if (count($requests) > 0): ?>
+                <h3>Request List</h3>
 
-                        <?php foreach ($requests as $request): ?>
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Document Type</th>
+                            <th>Quantity</th>
+                            <th>Status</th>
+                            <th>Date Submitted</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <?php if (count($requests) > 0): ?>
+
+                            <?php foreach ($requests as $request): ?>
+
+                                <tr>
+
+                                    <td>
+                                        #<?= (int)$request["id"] ?>
+                                    </td>
+
+                                    <td>
+                                        <?= e($request["document_type"]) ?>
+                                    </td>
+
+                                    <td>
+                                        <?= (int)$request["quantity"] ?>
+                                    </td>
+
+                                    <td>
+                                        <span class="status <?= statusClass($request['status']) ?>">
+                                            <?= e($request["status"]) ?>
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <?= e($request["submitted_at"]) ?>
+                                    </td>
+
+                                    <td>
+                                        <a href="view_request.php?id=<?= (int)$request["id"] ?>">
+                                            View Details
+                                        </a>
+                                    </td>
+
+                                </tr>
+
+                            <?php endforeach; ?>
+
+                        <?php else: ?>
 
                             <tr>
 
-                                <td>
-                                    #<?= (int)$request["id"] ?>
-                                </td>
-
-                                <td>
-                                    <?= e($request["document_type"]) ?>
-                                </td>
-
-                                <td>
-                                    <?= (int)$request["quantity"] ?>
-                                </td>
-
-                                <td>
-                                <span class="status <?php echo statusClass($request['status']); ?>">
-                                    <?php echo e($request['status']); ?>
-                                </span>
-                                </td>
-
-                                <td>
-                                    <?= e($request["submitted_at"]) ?>
-                                </td>
-
-                                <td>
-                                    <a href="view_request.php?id=<?= (int)$request["id"] ?>">
-                                        View Details
-                                    </a>
+                                <td colspan="6" class="empty">
+                                    You have not submitted any document requests yet.
                                 </td>
 
                             </tr>
 
-                        <?php endforeach; ?>
+                        <?php endif; ?>
 
-                    <?php else: ?>
+                    </tbody>
 
-                        <tr>
+                </table>
 
-                            <td colspan="6" class="empty">
-                                You have not submitted any document requests yet.
-                            </td>
+            </section>
 
-                        </tr>
+        </main>
 
-                    <?php endif; ?>
-
-                </tbody>
-
-            </table>
-
-        </section>
-
-    </main>
+    </div>
 
 </body>
 
