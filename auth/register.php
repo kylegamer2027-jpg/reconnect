@@ -116,7 +116,7 @@ $csrf_token = generateCSRFToken();
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 
-<body>
+<body class="auth-page">
 
     <h1>Re-Connect</h1>
     <h2>Student Registration</h2>
@@ -136,63 +136,75 @@ $csrf_token = generateCSRFToken();
         <a href="login.php">Go to Login</a>
     <?php else: ?>
 
-        <form method="POST" action="">
+        
+<form method="POST" action="">
 
-            <input
-                type="hidden"
-                name="csrf_token"
-                value="<?= e($csrf_token) ?>"
-            >
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="<?= e($csrf_token) ?>"
+    >
 
-            <label>Student ID (optional)</label><br>
-            <input
-                type="text"
-                name="student_id"
-                placeholder="Enter your student ID"
-            >
-            <br><br>
+    <div class="auth-form-group">
+        <label for="student_id">Student ID (optional)</label>
+        <input
+            type="text"
+            id="student_id"
+            name="student_id"
+            placeholder="Enter your student ID"
+        >
+    </div>
 
-            <label>Full Name</label><br>
-            <input
-                type="text"
-                name="full_name"
-                required
-                placeholder="Enter your full name"
-            >
-            <br><br>
+    <div class="auth-form-group">
+        <label for="full_name">Full Name</label>
+        <input
+            type="text"
+            id="full_name"
+            name="full_name"
+            required
+            placeholder="Enter your full name"
+        >
+    </div>
 
-            <label>Email Address</label><br>
-            <input
-                type="email"
-                name="email"
-                required
-                placeholder="Enter your email"
-            >
-            <br><br>
+    <div class="auth-form-group">
+        <label for="email">Email Address</label>
+        <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="Enter your email"
+        >
+    </div>
 
-            <label>Password</label><br>
-            <input
-                type="password"
-                name="password"
-                required
-                minlength="8"
-                placeholder="At least 8 characters"
-            >
-            <br><br>
+    <div class="auth-form-group">
+        <label for="password">Password</label>
+        <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            minlength="8"
+            placeholder="At least 8 characters"
+        >
+    </div>
 
-            <label>Confirm Password</label><br>
-            <input
-                type="password"
-                name="confirm_password"
-                required
-                minlength="8"
-                placeholder="Confirm your password"
-            >
-            <br><br>
+    <div class="auth-form-group">
+        <label for="confirm_password">Confirm Password</label>
+        <input
+            type="password"
+            id="confirm_password"
+            name="confirm_password"
+            required
+            minlength="8"
+            placeholder="Confirm your password"
+        >
+    </div>
 
-            <button type="submit">Register Account</button>
+    <button type="submit">Register Account</button>
 
-        </form>
+</form>
+
 
         <p>
             Already have an account?

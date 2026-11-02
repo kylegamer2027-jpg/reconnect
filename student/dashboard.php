@@ -30,7 +30,6 @@ $stmt = $pdo->prepare("
 ");
 
 $stmt->execute([$user_id]);
-
 $stats = $stmt->fetch();
 
 // Get the student's recent requests
@@ -43,7 +42,6 @@ $stmt = $pdo->prepare("
 ");
 
 $stmt->execute([$user_id]);
-
 $recent_requests = $stmt->fetchAll();
 
 ?>
@@ -52,20 +50,17 @@ $recent_requests = $stmt->fetchAll();
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Student Dashboard | Re-Connect</title>
 
     <link rel="stylesheet" href="../assets/css/style.css">
-
 </head>
 
 <body>
 
-   <!-- Header -->
+<!-- HEADER -->
 <header class="header">
 
     <div class="header-brand">
@@ -87,154 +82,196 @@ $recent_requests = $stmt->fetchAll();
 
 </header>
 
+<!-- DASHBOARD LAYOUT -->
+<div class="dashboard-layout">
 
-    <div class="dashboard-layout">
-
+    <!-- SIDEBAR -->
     <aside class="sidebar">
 
         <nav class="sidebar-nav">
 
             <a href="dashboard.php" class="sidebar-link active">
-                <span>Dashboard</span>
+                Dashboard
             </a>
 
             <a href="request_document.php" class="sidebar-link">
-                <span>Request Document</span>
+                Request Document
             </a>
 
             <a href="my_requests.php" class="sidebar-link">
-                <span>My Requests</span>
+                My Requests
             </a>
 
         </nav>
 
     </aside>
 
+    <!-- MAIN CONTENT -->
     <main class="container dashboard-content">
 
-        <!-- Welcome Section -->
-        <section class="welcome">
+        <!-- WELCOME SECTION -->
+        <section class="welcome student-welcome">
 
-            <h2>
-                Welcome, <?= e($_SESSION["full_name"]) ?>!
-            </h2>
+            <div>
+                <h2>
+                    Welcome, <?= e($_SESSION["full_name"]) ?>!
+                </h2>
 
-            <p>
-                Monitor your academic document requests through your dashboard.
-            </p>
+                <p>
+                    Monitor your academic document requests through your dashboard.
+                </p>
+            </div>
+
+            <a href="request_document.php" class="dashboard-action">
+                + Request a Document
+            </a>
 
         </section>
 
-
-        <!-- Statistics -->
+        <!-- STATISTICS -->
         <section class="dashboard-cards">
 
-            <div class="card">
-                <h3>Total Requests</h3>
+            <div class="card student-stat-card">
+                <div class="stat-heading">
+                    <h3>Total Requests</h3>
+                    <span class="stat-icon">T</span>
+                </div>
 
                 <div class="number">
                     <?= (int)$stats["total_requests"] ?>
                 </div>
+
+                <p class="stat-description">All submitted requests</p>
             </div>
 
-
-            <div class="card">
-                <h3>Pending Requests</h3>
+            <div class="card student-stat-card">
+                <div class="stat-heading">
+                    <h3>Pending Requests</h3>
+                    <span class="stat-icon">P</span>
+                </div>
 
                 <div class="number">
                     <?= (int)$stats["pending_requests"] ?>
                 </div>
+
+                <p class="stat-description">Waiting for review</p>
             </div>
 
-
-            <div class="card">
-                <h3>Ready for Release</h3>
+            <div class="card student-stat-card">
+                <div class="stat-heading">
+                    <h3>Ready for Release</h3>
+                    <span class="stat-icon">R</span>
+                </div>
 
                 <div class="number">
                     <?= (int)$stats["ready_requests"] ?>
                 </div>
+
+                <p class="stat-description">Available for claiming</p>
             </div>
 
-
-            <div class="card">
-                <h3>Completed Requests</h3>
+            <div class="card student-stat-card">
+                <div class="stat-heading">
+                    <h3>Completed Requests</h3>
+                    <span class="stat-icon">C</span>
+                </div>
 
                 <div class="number">
                     <?= (int)$stats["completed_requests"] ?>
                 </div>
+
+                <p class="stat-description">Successfully completed</p>
             </div>
 
         </section>
 
+        <!-- RECENT REQUESTS -->
+        <section class="section student-recent-section">
 
-        <!-- Recent Requests -->
-        <section class="section">
+            <div class="section-heading">
+                <div>
+                    <h3>Recent Document Requests</h3>
+                    <p>View the latest updates on your document requests.</p>
+                </div>
 
-            <h3>Recent Document Requests</h3>
+                <a href="my_requests.php" class="view-all-link">
+                    View All
+                </a>
+            </div>
 
-            <table>
+            <div class="student-table-wrapper">
 
-                <thead>
+                <table class="student-request-table">
 
-                    <tr>
-                        <th>Request ID</th>
-                        <th>Document Type</th>
-                        <th>Status</th>
-                        <th>Date Submitted</th>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Document Type</th>
+                            <th>Status</th>
+                            <th>Date Submitted</th>
+                        </tr>
+                    </thead>
 
-                </thead>
+                    <tbody>
 
-                <tbody>
+                        <?php if (count($recent_requests) > 0): ?>
 
-                    <?php if (count($recent_requests) > 0): ?>
+                            <?php foreach ($recent_requests as $request): ?>
 
-                        <?php foreach ($recent_requests as $request): ?>
+                                <tr>
+
+                                    <td>
+                                        <strong>
+                                            #<?= (int)$request["id"] ?>
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        <?= e($request["document_type"]) ?>
+                                    </td>
+
+                                    <td>
+                                        <span class="status">
+                                            <?= e($request["status"]) ?>
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <?= e($request["submitted_at"]) ?>
+                                    </td>
+
+                                </tr>
+
+                            <?php endforeach; ?>
+
+                        <?php else: ?>
 
                             <tr>
-
-                                <td>
-                                    <?= (int)$request["id"] ?>
+                                <td colspan="4" class="empty">
+                                    <div class="empty-state">
+                                        <h4>No Requests Yet</h4>
+                                        <p>
+                                            You have not submitted any document requests.
+                                        </p>
+                                        <a href="request_document.php">
+                                            Submit Your First Request
+                                        </a>
+                                    </div>
                                 </td>
-
-                                <td>
-                                    <?= e($request["document_type"]) ?>
-                                </td>
-
-                                <td>
-                                    <span class="status">
-                                        <?= e($request["status"]) ?>
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <?= e($request["submitted_at"]) ?>
-                                </td>
-
                             </tr>
 
-                        <?php endforeach; ?>
+                        <?php endif; ?>
 
-                    <?php else: ?>
+                    </tbody>
 
-                        <tr>
+                </table>
 
-                            <td colspan="4" class="empty">
-                                You have not submitted any document requests yet.
-                            </td>
-
-                        </tr>
-
-                    <?php endif; ?>
-
-                </tbody>
-
-            </table>
+            </div>
 
         </section>
 
     </main>
-    
+
 </div>
 
 </body>

@@ -85,7 +85,7 @@ $csrf_token = generateCSRFToken();
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 
-<body>
+<body class="auth-page">
 
     <h1>Re-Connect</h1>
 
@@ -101,41 +101,41 @@ $csrf_token = generateCSRFToken();
 
     <?php endif; ?>
 
-    <form method="POST" action="">
+    
+<form method="POST" action="">
 
-        <input
-            type="hidden"
-            name="csrf_token"
-            value="<?= e($csrf_token) ?>"
-        >
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="<?= e($csrf_token) ?>"
+    >
 
-        <label>Email Address</label>
-        <br>
-
+    <div class="auth-form-group">
+        <label for="email">Email Address</label>
         <input
             type="email"
+            id="email"
             name="email"
             required
             placeholder="Enter your email"
         >
+    </div>
 
-        <br><br>
-
-        <label>Password</label>
-        <br>
-
+    <div class="auth-form-group">
+        <label for="password">Password</label>
         <input
             type="password"
+            id="password"
             name="password"
             required
             placeholder="Enter your password"
         >
+    </div>
 
-        <br><br>
+    <button type="submit">Login</button>
 
-        <button type="submit">Login</button>
+</form>
 
-    </form>
 
     <p>
         Don't have an account?

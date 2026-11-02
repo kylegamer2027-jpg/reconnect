@@ -1,183 +1,185 @@
 
-    <?php
+<?php
 
-    require_once "../config/database.php";
-    require_once "../includes/functions.php";
+require_once "../config/database.php";
+require_once "../includes/functions.php";
 
-    // Check registrar access
-    if (!isset($_SESSION["user_id"])) {
-        header("Location: ../auth/login.php");
-        exit;
-    }
+// Check registrar access
+if (!isset($_SESSION["user_id"])) {
+    header("Location: ../auth/login.php");
+    exit;
+}
 
-    if ($_SESSION["role"] !== "registrar") {
-        header("Location: ../auth/login.php");
-        exit;
-    }
+if ($_SESSION["role"] !== "registrar") {
+    header("Location: ../auth/login.php");
+    exit;
+}
 
-    // Search and filter values
-    $search = substr(trim($_GET["search"] ?? ""), 0, 100);
-    $document_type = $_GET["document_type"] ?? "";
-    $status = $_GET["status"] ?? "";
+// Search and filter values
+$search = substr(trim($_GET["search"] ?? ""), 0, 100);
+$document_type = $_GET["document_type"] ?? "";
+$status = $_GET["status"] ?? "";
 
-    // Available filters
-    $document_types = [
-        "Certificate of Enrollment",
-        "Certificate of Grades",
-        "Transcript of Records",
-        "Other"
-    ];
+// Available filters
+$document_types = [
+    "Certificate of Enrollment",
+    "Certificate of Grades",
+    "Transcript of Records",
+    "Other"
+];
 
-    $statuses = [
-        "Pending",
-        "Under Review",
-        "Processing",
-        "Ready for Release",
-        "Completed",
-        "Rejected"
-    ];
+$statuses = [
+    "Pending",
+    "Under Review",
+    "Processing",
+    "Ready for Release",
+    "Completed",
+    "Rejected"
+];
 
-    // Build query conditions
-    $sql = "
-        SELECT
-            dr.id,
-            dr.document_type,
-            dr.quantity,
-            dr.purpose,
-            dr.status,
-            dr.submitted_at,
-            u.full_name,
-            u.student_id,
-            u.email
-        FROM document_requests dr
-        INNER JOIN users u ON dr.user_id = u.id
-        WHERE 1 = 1
+// Build query conditions
+$sql = "
+    SELECT
+        dr.id,
+        dr.document_type,
+        dr.quantity,
+        dr.purpose,
+        dr.status,
+        dr.submitted_at,
+        u.full_name,
+        u.student_id,
+        u.email
+    FROM document_requests dr
+    INNER JOIN users u ON dr.user_id = u.id
+    WHERE 1 = 1
+";
+
+$params = [];
+
+// Search student name or student ID
+if ($search !== "") {
+    $sql .= "
+        AND (
+            u.full_name LIKE ?
+            OR u.student_id LIKE ?
+        )
     ";
 
-    $params = [];
+    $searchValue = "%" . $search . "%";
 
-    // Search student name or student ID
-    if ($search !== "") {
-        $sql .= "
-            AND (
-                u.full_name LIKE ?
-                OR u.student_id LIKE ?
-            )
-        ";
+    $params[] = $searchValue;
+    $params[] = $searchValue;
+}
 
-        $searchValue = "%" . $search . "%";
+// Filter document type
+if (in_array($document_type, $document_types, true)) {
+    $sql .= " AND dr.document_type = ?";
+    $params[] = $document_type;
+} else {
+    $document_type = "";
+}
 
-        $params[] = $searchValue;
-        $params[] = $searchValue;
-    }
+// Filter request status
+if (in_array($status, $statuses, true)) {
+    $sql .= " AND dr.status = ?";
+    $params[] = $status;
+} else {
+    $status = "";
+}
 
-    // Filter document type
-    if (in_array($document_type, $document_types, true)) {
-        $sql .= " AND dr.document_type = ?";
-        $params[] = $document_type;
-    } else {
-        $document_type = "";
-    }
+// Latest requests first
+$sql .= " ORDER BY dr.submitted_at DESC, dr.id DESC";
 
-    // Filter request status
-    if (in_array($status, $statuses, true)) {
-        $sql .= " AND dr.status = ?";
-        $params[] = $status;
-    } else {
-        $status = "";
-    }
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
 
-    // Latest requests first
-    $sql .= " ORDER BY dr.submitted_at DESC, dr.id DESC";
+$requests = $stmt->fetchAll();
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+?>
 
-    $requests = $stmt->fetchAll();
+<!DOCTYPE html>
+<html lang="en">
 
-    ?>
+<head>
 
-    <!DOCTYPE html>
-    <html lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <head>
+    <title>Manage Requests | Re-Connect</title>
 
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/css/style.css">
 
-        <title>Manage Requests | Re-Connect</title>
+</head>
 
-        <link rel="stylesheet" href="../assets/css/style.css">
+<body class="registrar-dashboard">
 
-    </head>
+<!-- HEADER -->
+<header class="header">
 
-    <body>
+    <div class="header-brand">
+        <h1>Re-Connect</h1>
+        <p>Registrar Department</p>
+    </div>
 
-    <header class="header">
+    <form class="logout" action="../auth/logout.php" method="POST">
 
-        <div class="header-brand">
-            <h1>Re-Connect</h1>
-            <p>Registrar Department</p>
-        </div>
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="<?= e(generateCSRFToken()) ?>"
+        >
 
-        <form class="logout" action="../auth/logout.php" method="POST">
+        <button type="submit">Logout</button>
 
-            <input
-                type="hidden"
-                name="csrf_token"
-                value="<?= e(generateCSRFToken()) ?>"
-            >
+    </form>
 
-            <button type="submit">Logout</button>
+</header>
 
-        </form>
+<div class="dashboard-layout">
 
-    </header>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-    <div class="dashboard-layout">
+        <nav class="sidebar-nav">
 
-        <!-- Registrar Sidebar -->
-        <aside class="sidebar">
+            <a href="dashboard.php" class="sidebar-link">
+                Dashboard
+            </a>
 
-            <nav class="sidebar-nav">
+            <a href="requests.php" class="sidebar-link active">
+                Manage Requests
+            </a>
 
-                <a href="dashboard.php" class="sidebar-link">
-                    Dashboard
-                </a>
+        </nav>
 
-                <a href="requests.php" class="sidebar-link active">
-                    Manage Requests
-                </a>
+    </aside>
 
-            </nav>
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-content">
 
-        </aside>
+        <!-- PAGE INTRODUCTION -->
+        <section class="welcome">
 
-        <!-- Main Content -->
-        <main class="container dashboard-content">
+            <h2>Student Document Requests</h2>
 
-            <section class="welcome">
+            <p>
+                Search, filter, and manage student document requests.
+            </p>
 
-                <h2>Student Document Requests</h2>
+        </section>
 
-                <p>
-                    Search, filter, and manage student document requests.
-                </p>
+        <!-- SEARCH AND FILTERS -->
+        <section class="section registrar-filter-section">
 
-            </section>
+            <h3>Search and Filter Requests</h3>
 
-            <!-- Search and Filters -->
-            <section class="section">
+            <form method="GET" action="requests.php" class="registrar-filter-form">
 
-                <h3>Search and Filter Requests</h3>
-
-                <form method="GET" action="requests.php">
+                <div class="filter-field">
 
                     <label for="search">
                         Student Name or Student ID
                     </label>
-
-                    <br>
 
                     <input
                         type="text"
@@ -185,22 +187,18 @@
                         id="search"
                         placeholder="Enter student name or ID"
                         value="<?= e($search) ?>"
-                        style="padding: 10px; width: 100%; max-width: 400px;"
+                        maxlength="100"
                     >
 
-                    <br><br>
+                </div>
+
+                <div class="filter-field">
 
                     <label for="document_type">
                         Document Type
                     </label>
 
-                    <br>
-
-                    <select
-                        name="document_type"
-                        id="document_type"
-                        style="padding: 10px; width: 100%; max-width: 400px;"
-                    >
+                    <select name="document_type" id="document_type">
 
                         <option value="">All Document Types</option>
 
@@ -217,19 +215,15 @@
 
                     </select>
 
-                    <br><br>
+                </div>
+
+                <div class="filter-field">
 
                     <label for="status">
                         Request Status
                     </label>
 
-                    <br>
-
-                    <select
-                        name="status"
-                        id="status"
-                        style="padding: 10px; width: 100%; max-width: 400px;"
-                    >
+                    <select name="status" id="status">
 
                         <option value="">All Statuses</option>
 
@@ -246,50 +240,41 @@
 
                     </select>
 
-                    <br><br>
+                </div>
 
-                    <button
-                        type="submit"
-                        style="
-                            background: #173b63;
-                            color: white;
-                            padding: 11px 20px;
-                            border: none;
-                            border-radius: 5px;
-                            cursor: pointer;
-                        "
-                    >
+                <div class="filter-actions">
+
+                    <button type="submit" class="btn-primary">
                         Apply Filters
                     </button>
 
-                    <a
-                        href="requests.php"
-                        style="
-                            display: inline-block;
-                            margin-left: 10px;
-                            padding: 11px 20px;
-                            background: #e5e7eb;
-                            color: #333;
-                            text-decoration: none;
-                            border-radius: 5px;
-                        "
-                    >
+                    <a href="requests.php" class="btn-secondary">
                         Reset Filters
                     </a>
 
-                </form>
+                </div>
 
-            </section>
+            </form>
 
-            <!-- Request Results -->
-            <section class="section">
+        </section>
 
-                <h3>Request Results</h3>
+        <!-- REQUEST RESULTS -->
+        <section class="section registrar-results-section">
 
-                <p>
-                    Matching Requests:
-                    <strong><?= count($requests) ?></strong>
-                </p>
+            <div class="results-heading">
+
+                <div>
+                    <h3>Request Results</h3>
+
+                    <p>
+                        Matching Requests:
+                        <strong><?= count($requests) ?></strong>
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="registrar-table-wrapper">
 
                 <table>
 
@@ -347,7 +332,10 @@
                                     </td>
 
                                     <td>
-                                        <a href="view_request.php?id=<?= (int)$request["id"] ?>">
+                                        <a
+                                            href="view_request.php?id=<?= (int)$request["id"] ?>"
+                                            class="registrar-view-link"
+                                        >
                                             View Request
                                         </a>
                                     </td>
@@ -370,11 +358,13 @@
 
                 </table>
 
-            </section>
+            </div>
 
-        </main>
+        </section>
 
-    </div>
+    </main>
 
-    </body>
-    </html>
+</div>
+
+</body>
+</html>

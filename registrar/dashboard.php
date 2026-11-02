@@ -30,29 +30,20 @@ $statsStmt = $pdo->query("
 
 $stats = $statsStmt->fetch();
 
-// Get request status chart data
+// Prepare status report
 $statusLabels = [
-    "Pending",
-    "Under Review",
-    "Processing",
-    "Ready for Release",
-    "Completed",
-    "Rejected"
+    "Pending" => "pending_requests",
+    "Under Review" => "under_review",
+    "Processing" => "processing",
+    "Ready for Release" => "ready_requests",
+    "Completed" => "completed_requests",
+    "Rejected" => "rejected_requests"
 ];
 
 $statusCounts = [];
 
-foreach ($statusLabels as $label) {
-    $statusCounts[$label] = (int)($stats[
-        match ($label) {
-            "Pending" => "pending_requests",
-            "Under Review" => "under_review",
-            "Processing" => "processing",
-            "Ready for Release" => "ready_requests",
-            "Completed" => "completed_requests",
-            "Rejected" => "rejected_requests"
-        }
-    ] ?? 0);
+foreach ($statusLabels as $label => $column) {
+    $statusCounts[$label] = (int)($stats[$column] ?? 0);
 }
 
 // Get document type report
@@ -65,7 +56,7 @@ $typeStmt = $pdo->query("
 
 $typeReports = $typeStmt->fetchAll();
 
-// Get maximum counts for chart widths
+// Calculate chart widths
 $maxStatusCount = max(1, ...array_values($statusCounts));
 
 $typeCounts = array_map(
@@ -99,12 +90,15 @@ $recentRequests = $recentStmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Registrar Dashboard | Re-Connect</title>
+
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 
-<body>
+<body class="registrar-dashboard">
 
+<!-- HEADER -->
 <header class="header">
 
     <div class="header-brand">
@@ -113,6 +107,7 @@ $recentRequests = $recentStmt->fetchAll();
     </div>
 
     <form class="logout" action="../auth/logout.php" method="POST">
+
         <input
             type="hidden"
             name="csrf_token"
@@ -120,13 +115,14 @@ $recentRequests = $recentStmt->fetchAll();
         >
 
         <button type="submit">Logout</button>
+
     </form>
 
 </header>
 
 <div class="dashboard-layout">
 
-    <!-- Registrar Sidebar -->
+    <!-- SIDEBAR -->
     <aside class="sidebar">
 
         <nav class="sidebar-nav">
@@ -143,40 +139,34 @@ $recentRequests = $recentStmt->fetchAll();
 
     </aside>
 
-    <!-- Dashboard Content -->
-    <main class="container dashboard-content">
+    <!-- MAIN DASHBOARD -->
+    <main class="dashboard-content">
 
-        <!-- Welcome Section -->
-        <section class="welcome">
+        <!-- WELCOME SECTION -->
+        <section class="welcome registrar-welcome">
 
-            <h2>
-                Welcome, <?= e($_SESSION["full_name"]) ?>!
-            </h2>
+            <div>
+                <h2>
+                    Welcome, <?= e($_SESSION["full_name"]) ?>!
+                </h2>
 
-            <p>
-                Manage student document requests and monitor their progress.
-            </p>
+                <p>
+                    Manage student document requests and monitor their progress.
+                </p>
+            </div>
 
-            <a href="requests.php"
-               style="
-                   display: inline-block;
-                   background: #173b63;
-                   color: white;
-                   padding: 12px 20px;
-                   text-decoration: none;
-                   border-radius: 5px;
-               ">
+            <a href="requests.php" class="registrar-action-btn">
                 Manage Student Requests
             </a>
 
         </section>
 
-        <!-- Request Statistics -->
-        <section class="section">
+        <!-- REQUEST STATISTICS -->
+        <section class="section registrar-statistics">
 
             <h3>Request Statistics</h3>
 
-            <div class="dashboard-cards">
+            <div class="registrar-stats-grid">
 
                 <div class="card">
                     <h3>Total Requests</h3>
@@ -217,8 +207,8 @@ $recentRequests = $recentStmt->fetchAll();
 
         </section>
 
-        <!-- Reports and Charts -->
-        <section class="section">
+        <!-- REPORTS AND ANALYTICS -->
+        <section class="section registrar-analytics">
 
             <h3>Request Reports and Analytics</h3>
 
@@ -232,7 +222,7 @@ $recentRequests = $recentStmt->fetchAll();
 
             <div class="report-grid">
 
-                <!-- Status Report -->
+                <!-- STATUS REPORT -->
                 <div class="report-card">
 
                     <h3>Requests by Status</h3>
@@ -240,7 +230,7 @@ $recentRequests = $recentStmt->fetchAll();
                     <?php foreach ($statusCounts as $label => $count): ?>
 
                         <?php
-                            $percentage = ($count / $maxStatusCount) * 100;
+                        $percentage = ($count / $maxStatusCount) * 100;
                         ?>
 
                         <div class="chart-item">
@@ -265,7 +255,7 @@ $recentRequests = $recentStmt->fetchAll();
 
                 </div>
 
-                <!-- Document Type Report -->
+                <!-- DOCUMENT TYPE REPORT -->
                 <div class="report-card">
 
                     <h3>Requests by Document Type</h3>
@@ -275,20 +265,18 @@ $recentRequests = $recentStmt->fetchAll();
                         <?php foreach ($typeReports as $item): ?>
 
                             <?php
-                                $count = (int)$item["total"];
-                                $percentage = ($count / $maxTypeCount) * 100;
+                            $count = (int)$item["total"];
+                            $percentage = ($count / $maxTypeCount) * 100;
                             ?>
 
                             <div class="chart-item">
 
                                 <div class="chart-label">
-
                                     <span>
                                         <?= e($item["document_type"]) ?>
                                     </span>
 
                                     <strong><?= $count ?></strong>
-
                                 </div>
 
                                 <div class="chart-track">
@@ -318,77 +306,84 @@ $recentRequests = $recentStmt->fetchAll();
 
         </section>
 
-        <!-- Recent Requests -->
-        <section class="section">
+        <!-- RECENT REQUESTS -->
+        <section class="section registrar-recent">
 
             <h3>Recently Submitted Requests</h3>
 
-            <table>
+            <div class="registrar-table-wrapper">
 
-                <thead>
-                    <tr>
-                        <th>Request ID</th>
-                        <th>Student Name</th>
-                        <th>Document Type</th>
-                        <th>Status</th>
-                        <th>Date Submitted</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
+                <table>
 
-                <tbody>
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Student Name</th>
+                            <th>Document Type</th>
+                            <th>Status</th>
+                            <th>Date Submitted</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
 
-                    <?php if (count($recentRequests) > 0): ?>
+                    <tbody>
 
-                        <?php foreach ($recentRequests as $request): ?>
+                        <?php if (count($recentRequests) > 0): ?>
+
+                            <?php foreach ($recentRequests as $request): ?>
+
+                                <tr>
+
+                                    <td>
+                                        #<?= (int)$request["id"] ?>
+                                    </td>
+
+                                    <td>
+                                        <?= e($request["full_name"]) ?>
+                                    </td>
+
+                                    <td>
+                                        <?= e($request["document_type"]) ?>
+                                    </td>
+
+                                    <td>
+                                        <span class="status <?= e(statusClass($request["status"])) ?>">
+                                            <?= e($request["status"]) ?>
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <?= e($request["submitted_at"]) ?>
+                                    </td>
+
+                                    <td>
+                                        <a
+                                            href="view_request.php?id=<?= (int)$request["id"] ?>"
+                                            class="registrar-view-link"
+                                        >
+                                            View Request
+                                        </a>
+                                    </td>
+
+                                </tr>
+
+                            <?php endforeach; ?>
+
+                        <?php else: ?>
 
                             <tr>
-
-                                <td>
-                                    #<?= (int)$request["id"] ?>
+                                <td colspan="6" class="empty">
+                                    No student requests available.
                                 </td>
-
-                                <td>
-                                    <?= e($request["full_name"]) ?>
-                                </td>
-
-                                <td>
-                                    <?= e($request["document_type"]) ?>
-                                </td>
-
-                                <td>
-                                    <span class="status <?= e(statusClass($request["status"])) ?>">
-                                        <?= e($request["status"]) ?>
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <?= e($request["submitted_at"]) ?>
-                                </td>
-
-                                <td>
-                                    <a href="view_request.php?id=<?= (int)$request["id"] ?>">
-                                        View Request
-                                    </a>
-                                </td>
-
                             </tr>
 
-                        <?php endforeach; ?>
+                        <?php endif; ?>
 
-                    <?php else: ?>
+                    </tbody>
 
-                        <tr>
-                            <td colspan="6" class="empty">
-                                No student requests available.
-                            </td>
-                        </tr>
+                </table>
 
-                    <?php endif; ?>
-
-                </tbody>
-
-            </table>
+            </div>
 
         </section>
 
