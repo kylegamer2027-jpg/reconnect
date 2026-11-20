@@ -38,4 +38,33 @@ function statusClass($status) {
 
     return $classes[$status] ?? "status-default";
 }
+
+function requireLogin($role = null) {
+    if (!isset($_SESSION["user_id"])) {
+        header("Location: /reconnect/auth/login.php");
+        exit;
+    }
+
+    if ($role !== null && ($_SESSION["role"] ?? "") !== $role) {
+        header("Location: /reconnect/auth/login.php");
+        exit;
+    }
+}
+
+function setFlash($type, $message) {
+    $_SESSION["flash"] = [
+        "type" => $type,
+        "message" => $message
+    ];
+}
+
+function getFlash() {
+    if (!isset($_SESSION["flash"])) {
+        return null;
+    }
+
+    $flash = $_SESSION["flash"];
+    unset($_SESSION["flash"]);
+    return $flash;
+}
 ?>

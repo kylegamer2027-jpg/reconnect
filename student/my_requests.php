@@ -97,6 +97,10 @@ $requests = $stmt->fetchAll();
                     My Requests
                 </a>
 
+                <a href="profile.php" class="sidebar-link">
+                    Profile
+                </a>
+
             </nav>
 
         </aside>

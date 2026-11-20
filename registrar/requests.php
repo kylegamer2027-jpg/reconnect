@@ -150,6 +150,10 @@ $requests = $stmt->fetchAll();
                 Manage Requests
             </a>
 
+            <a href="students.php" class="sidebar-link">
+                Students
+            </a>
+
         </nav>
 
     </aside>

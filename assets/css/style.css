@@ -1461,6 +1461,193 @@ body.auth-page form button {
   }
 }
 
+/* Landing page */
+.landing-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(12, 99, 36, 0.12), transparent 28rem),
+    var(--background);
+}
+
+.landing-nav {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.landing-nav nav {
+  display: flex;
+  gap: 10px;
+}
+
+.landing-brand,
+.landing-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.landing-brand strong {
+  font-size: 22px;
+}
+
+.landing-link {
+  padding: 10px 14px;
+  border-radius: 6px;
+}
+
+.landing-link-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.landing-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 70px 20px 40px;
+}
+
+.landing-hero {
+  max-width: 760px;
+}
+
+.landing-eyebrow {
+  color: var(--primary);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.landing-hero h1 {
+  color: #183c25;
+  font-size: clamp(42px, 7vw, 78px);
+  line-height: 1.02;
+  margin-bottom: 24px;
+}
+
+.landing-copy {
+  max-width: 650px;
+  color: var(--muted);
+  font-size: 18px;
+  margin-bottom: 28px;
+}
+
+.landing-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.landing-actions .btn-primary,
+.landing-actions .btn-secondary {
+  min-width: 150px;
+  padding: 14px 20px;
+}
+
+.landing-features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 70px;
+}
+
+.landing-features article {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.landing-features article span {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.landing-features h2 {
+  color: var(--primary);
+  margin: 12px 0 8px;
+}
+
+.landing-features p {
+  color: var(--muted);
+}
+
+.profile-section {
+  max-width: 720px;
+}
+
+.profile-form {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-form input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.profile-form hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 18px 0 10px;
+}
+
+.profile-form h3 {
+  margin: 0 0 8px;
+}
+
+.profile-form .btn-primary {
+  justify-self: start;
+  margin-top: 12px;
+}
+
+.alert {
+  max-width: 720px;
+  margin-bottom: 18px;
+  padding: 13px 16px;
+  border-radius: 7px;
+  border-left: 4px solid;
+}
+
+.alert-success {
+  background: #e9f7ec;
+  color: #155724;
+  border-color: #28a745;
+}
+
+.alert-error {
+  background: #fdebec;
+  color: #721c24;
+  border-color: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .landing-nav {
+    align-items: flex-start;
+  }
+
+  .landing-nav nav {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .landing-main {
+    padding-top: 40px;
+  }
+
+  .landing-features {
+    grid-template-columns: 1fr;
+    margin-top: 45px;
+  }
+}
+
 /* =====================================================
    RE-CONNECT — MODERN UI/UX REDESIGN
    Professional University Portal Theme
