@@ -135,10 +135,6 @@ $recentRequests = $recentStmt->fetchAll();
                 Manage Requests
             </a>
 
-            <a href="appointments.php" class="sidebar-link">
-                Appointments
-            </a>
-
             <a href="students.php" class="sidebar-link">
                 Students
             </a>

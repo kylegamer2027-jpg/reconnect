@@ -114,7 +114,6 @@ $flash = getFlash();
             <a href="dashboard.php" class="sidebar-link">Dashboard</a>
             <a href="request_document.php" class="sidebar-link">Request Document</a>
             <a href="my_requests.php" class="sidebar-link">My Requests</a>
-            <a href="appointments.php" class="sidebar-link">Appointments</a>
             <a href="profile.php" class="sidebar-link active">Profile</a>
         </nav>
     </aside>

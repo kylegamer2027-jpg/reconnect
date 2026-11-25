@@ -17,6 +17,8 @@ if ($_SESSION["role"] !== "student") {
 }
 
 $error = "";
+$purpose = "";
+$additional_details = "";
 
 // Available document types
 $document_types = [
@@ -34,15 +36,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     } else {
 
-        $document_type = trim($_POST["document_type"] ?? "");
+        $document_type = is_string($_POST["document_type"] ?? null)
+            ? trim($_POST["document_type"])
+            : "";
         $quantity = filter_var(
             $_POST["quantity"] ?? null,
             FILTER_VALIDATE_INT
         );
-        $purpose = trim($_POST["purpose"] ?? "");
-        $additional_details = trim(
-            $_POST["additional_details"] ?? ""
-        );
+        $purpose = is_string($_POST["purpose"] ?? null)
+            ? trim($_POST["purpose"])
+            : "";
+        $additional_details = $document_type === "Other" &&
+                              is_string($_POST["additional_details"] ?? null)
+            ? trim($_POST["additional_details"])
+            : "";
 
         if (!in_array($document_type, $document_types, true)) {
 
@@ -52,16 +59,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $error = "Quantity must be between 1 and 10.";
 
-        } elseif ($purpose === "") {
-
-            $error = "Please provide the purpose of your request.";
-
         } elseif (
             $document_type === "Other" &&
             $additional_details === ""
         ) {
 
             $error = "Please specify the document you need.";
+
+        } elseif ($purpose === "") {
+
+            $error = "Please provide the purpose of your request.";
 
         } else {
 
@@ -176,10 +183,6 @@ $request_id = filter_var(
                     My Requests
                 </a>
 
-                <a href="appointments.php" class="sidebar-link">
-                    Appointments
-                </a>
-
                 <a href="profile.php" class="sidebar-link">
                     Profile
                 </a>
@@ -287,26 +290,31 @@ $request_id = filter_var(
 
                         <br><br>
 
-                        <label>Purpose of Request</label>
-                        <br>
+                        <div
+                            id="additional-details-group"
+                            <?= ($_POST["document_type"] ?? "") === "Other" ? "" : "hidden" ?>
+                        >
+                            <label for="additional_details">Additional Details</label>
+                            <br>
+                            <textarea
+                                id="additional_details"
+                                name="additional_details"
+                                rows="4"
+                                <?= ($_POST["document_type"] ?? "") === "Other" ? "required" : "disabled" ?>
+                                placeholder="Specify the document you need."
+                            ><?= e($additional_details) ?></textarea>
+                            <br><br>
+                        </div>
 
+                        <label for="purpose">Purpose of Request</label>
+                        <br>
                         <textarea
+                            id="purpose"
                             name="purpose"
                             rows="4"
                             required
                             placeholder="Explain why you need this document."
-                        ><?= e($_POST["purpose"] ?? "") ?></textarea>
-
-                        <br><br>
-
-                        <label>Additional Details</label>
-                        <br>
-
-                        <textarea
-                            name="additional_details"
-                            rows="4"
-                            placeholder="If you selected Other, specify the document here."
-                        ><?= e($_POST["additional_details"] ?? "") ?></textarea>
+                        ><?= e($purpose ?? "") ?></textarea>
 
                         <br><br>
 
@@ -324,5 +332,6 @@ $request_id = filter_var(
 
     </div>
 
+<script src="../assets/js/script.js"></script>
 </body>
 </html>

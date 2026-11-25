@@ -102,10 +102,6 @@ $recent_requests = $stmt->fetchAll();
                 My Requests
             </a>
 
-            <a href="appointments.php" class="sidebar-link">
-                Appointments
-            </a>
-
             <a href="profile.php" class="sidebar-link">
                 Profile
             </a>
@@ -133,10 +129,6 @@ $recent_requests = $stmt->fetchAll();
             <a href="request_document.php" class="dashboard-action">
                 + Request a Document
             </a>
-            <a href="appointments.php" class="dashboard-action">
-                Book an Appointment
-            </a>
-
         </section>
 
         <!-- STATISTICS -->

@@ -36,3 +36,19 @@ if (roleSelect && loginIdLabel && loginIdInput) {
   roleSelect.addEventListener("change", updateLoginId);
   updateLoginId();
 }
+
+const documentTypeSelect = document.querySelector('[name="document_type"]');
+const additionalDetailsGroup = document.querySelector("#additional-details-group");
+const additionalDetailsInput = document.querySelector("#additional_details");
+
+if (documentTypeSelect && additionalDetailsGroup && additionalDetailsInput) {
+  const updateAdditionalDetails = () => {
+    const isOther = documentTypeSelect.value === "Other";
+    additionalDetailsGroup.hidden = !isOther;
+    additionalDetailsInput.disabled = !isOther;
+    additionalDetailsInput.required = isOther;
+  };
+
+  documentTypeSelect.addEventListener("change", updateAdditionalDetails);
+  updateAdditionalDetails();
+}

@@ -103,7 +103,6 @@ $csrf_token = generateCSRFToken();
                 placeholder="<?= $selected_role === "registrar" ? "Enter your registrar ID" : "Enter your school ID" ?>"
                 data-numeric-only
             >
-            <small class="auth-hint">Numbers only.</small>
         </div>
 
         <div class="auth-form-group">

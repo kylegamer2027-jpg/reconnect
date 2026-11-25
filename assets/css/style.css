@@ -1669,31 +1669,6 @@ body.auth-page form button {
   box-shadow: 0 0 0 3px rgba(12, 99, 36, 0.12);
 }
 
-.appointment-status-form {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 180px;
-}
-
-.appointment-status-form select {
-  min-width: 110px;
-  padding: 7px;
-}
-
-.appointment-status-form button {
-  padding: 7px 10px;
-  border: 0;
-  border-radius: 5px;
-  background: var(--primary);
-  color: white;
-  cursor: pointer;
-}
-
-.appointment-status-form button:hover {
-  background: var(--primary-dark);
-}
-
 .profile-form hr {
   border: 0;
   border-top: 1px solid var(--border);
