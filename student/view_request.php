@@ -124,6 +124,10 @@ $history = $stmt->fetchAll();
                     My Requests
                 </a>
 
+                <a href="appointments.php" class="sidebar-link">
+                    Appointments
+                </a>
+
             </nav>
 
         </aside>

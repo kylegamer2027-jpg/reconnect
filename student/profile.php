@@ -20,15 +20,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!verifyCSRFToken($_POST["csrf_token"] ?? "")) {
         $error = "Invalid request. Please refresh the page.";
     } else {
-        $student_id = trim($_POST["student_id"] ?? "");
+        $student_id = is_string($_POST["student_id"] ?? null)
+            ? trim($_POST["student_id"])
+            : "";
         $full_name = trim($_POST["full_name"] ?? "");
         $email = strtolower(trim($_POST["email"] ?? ""));
         $current_password = $_POST["current_password"] ?? "";
         $new_password = $_POST["new_password"] ?? "";
         $confirm_password = $_POST["confirm_password"] ?? "";
 
-        if ($student_id === "" || strlen($student_id) > 50) {
-            $error = "Student ID is required and must not exceed 50 characters.";
+        if ($student_id === "" || !preg_match('/^[0-9]{1,50}$/', $student_id)) {
+            $error = "Student ID is required and must contain numbers only (up to 50 digits).";
         } elseif ($full_name === "" || strlen($full_name) > 150) {
             $error = "Full name is required and must not exceed 150 characters.";
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 150) {
@@ -112,6 +114,7 @@ $flash = getFlash();
             <a href="dashboard.php" class="sidebar-link">Dashboard</a>
             <a href="request_document.php" class="sidebar-link">Request Document</a>
             <a href="my_requests.php" class="sidebar-link">My Requests</a>
+            <a href="appointments.php" class="sidebar-link">Appointments</a>
             <a href="profile.php" class="sidebar-link active">Profile</a>
         </nav>
     </aside>
@@ -123,7 +126,7 @@ $flash = getFlash();
             <form method="POST" class="profile-form">
                 <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
                 <label for="student_id">Student ID</label>
-                <input id="student_id" name="student_id" maxlength="50" required value="<?= e($student_id ?? ($profile["student_id"] ?? "")) ?>">
+                <input id="student_id" name="student_id" type="text" inputmode="numeric" pattern="[0-9]+" maxlength="50" required data-numeric-only value="<?= e($student_id ?? ($profile["student_id"] ?? "")) ?>">
                 <label for="full_name">Full Name</label>
                 <input id="full_name" name="full_name" maxlength="150" required value="<?= e($full_name ?? $profile["full_name"]) ?>">
                 <label for="email">Email Address</label>

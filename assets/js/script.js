@@ -13,3 +13,26 @@ document.querySelectorAll("[data-confirm]").forEach((element) => {
     }
   });
 });
+
+document.querySelectorAll("[data-numeric-only]").forEach((input) => {
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/\D/g, "");
+  });
+});
+
+const roleSelect = document.querySelector("#role");
+const loginIdLabel = document.querySelector("#login-id-label");
+const loginIdInput = document.querySelector("#login_id");
+
+if (roleSelect && loginIdLabel && loginIdInput) {
+  const updateLoginId = () => {
+    const isRegistrar = roleSelect.value === "registrar";
+    loginIdLabel.textContent = isRegistrar ? "Registrar ID" : "School ID";
+    loginIdInput.placeholder = isRegistrar
+      ? "Enter your registrar ID"
+      : "Enter your school ID";
+  };
+
+  roleSelect.addEventListener("change", updateLoginId);
+  updateLoginId();
+}

@@ -14,21 +14,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = "Invalid request. Please refresh the page.";
     } else {
 
-        $student_id = trim($_POST["student_id"] ?? "");
-        $full_name = trim($_POST["full_name"] ?? "");
-        $email = strtolower(trim($_POST["email"] ?? ""));
-        $password = $_POST["password"] ?? "";
-        $confirm_password = $_POST["confirm_password"] ?? "";
+        $student_id = is_string($_POST["student_id"] ?? null) ? trim($_POST["student_id"]) : "";
+        $full_name = is_string($_POST["full_name"] ?? null) ? trim($_POST["full_name"]) : "";
+        $email_input = is_string($_POST["email"] ?? null) ? $_POST["email"] : "";
+        $email = strtolower(trim($email_input));
+        $password = is_string($_POST["password"] ?? null) ? $_POST["password"] : "";
+        $confirm_password = is_string($_POST["confirm_password"] ?? null) ? $_POST["confirm_password"] : "";
 
         
         // Validate required fields
-if ($full_name === "" || $email === "" || $password === "" || $confirm_password === "") {
+if ($student_id === "" || $full_name === "" || $email === "" || $password === "" || $confirm_password === "") {
 
     $error = "Please complete all required fields.";
 
+} elseif (!preg_match('/^[0-9]+$/', $student_id)) {
+
+    $error = "Student ID must contain numbers only.";
+
 } elseif (strlen($student_id) > 50) {
 
-    $error = "Student ID is too long.";
+    $error = "Student ID must not exceed 50 digits.";
 
 } elseif (strlen($full_name) > 150) {
 
@@ -146,12 +151,17 @@ $csrf_token = generateCSRFToken();
     >
 
     <div class="auth-form-group">
-        <label for="student_id">Student ID (optional)</label>
+        <label for="student_id">School ID</label>
         <input
             type="text"
             id="student_id"
             name="student_id"
-            placeholder="Enter your student ID"
+            inputmode="numeric"
+            pattern="[0-9]+"
+            maxlength="50"
+            required
+            data-numeric-only
+            placeholder="Enter your school ID"
         >
     </div>
 

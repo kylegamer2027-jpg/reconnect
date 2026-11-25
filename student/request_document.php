@@ -176,6 +176,10 @@ $request_id = filter_var(
                     My Requests
                 </a>
 
+                <a href="appointments.php" class="sidebar-link">
+                    Appointments
+                </a>
+
                 <a href="profile.php" class="sidebar-link">
                     Profile
                 </a>
