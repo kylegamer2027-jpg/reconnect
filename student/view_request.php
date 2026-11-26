@@ -157,6 +157,13 @@ $history = $stmt->fetchAll();
                 </p>
 
                 <p>
+                    <strong>Date Needed:</strong>
+                    <?= !empty($request["requested_date"])
+                        ? e(date("F j, Y", strtotime($request["requested_date"])))
+                        : "Not specified" ?>
+                </p>
+
+                <p>
                     <strong>Purpose:</strong>
                     <?= nl2br(e($request["purpose"])) ?>
                 </p>

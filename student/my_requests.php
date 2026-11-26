@@ -24,6 +24,7 @@ $stmt = $pdo->prepare("
         id,
         document_type,
         quantity,
+        requested_date,
         purpose,
         status,
         submitted_at,
@@ -130,6 +131,7 @@ $requests = $stmt->fetchAll();
                             <th>Request ID</th>
                             <th>Document Type</th>
                             <th>Quantity</th>
+                            <th>Date Needed</th>
                             <th>Status</th>
                             <th>Date Submitted</th>
                             <th>Action</th>
@@ -158,6 +160,12 @@ $requests = $stmt->fetchAll();
                                     </td>
 
                                     <td>
+                                        <?= !empty($request["requested_date"])
+                                            ? e(date("F j, Y", strtotime($request["requested_date"])))
+                                            : "Not specified" ?>
+                                    </td>
+
+                                    <td>
                                         <span class="status <?= statusClass($request['status']) ?>">
                                             <?= e($request["status"]) ?>
                                         </span>
@@ -181,7 +189,7 @@ $requests = $stmt->fetchAll();
 
                             <tr>
 
-                                <td colspan="6" class="empty">
+                                <td colspan="7" class="empty">
                                     You have not submitted any document requests yet.
                                 </td>
 

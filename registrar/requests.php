@@ -43,6 +43,7 @@ $sql = "
         dr.id,
         dr.document_type,
         dr.quantity,
+        dr.requested_date,
         dr.purpose,
         dr.status,
         dr.submitted_at,
@@ -290,6 +291,7 @@ $requests = $stmt->fetchAll();
                             <th>Student ID</th>
                             <th>Document Type</th>
                             <th>Quantity</th>
+                            <th>Date Needed</th>
                             <th>Status</th>
                             <th>Date Submitted</th>
                             <th>Action</th>
@@ -326,6 +328,12 @@ $requests = $stmt->fetchAll();
                                     </td>
 
                                     <td>
+                                        <?= !empty($request["requested_date"])
+                                            ? e(date("F j, Y", strtotime($request["requested_date"])))
+                                            : "Not specified" ?>
+                                    </td>
+
+                                    <td>
                                         <span class="status <?= e(statusClass($request["status"])) ?>">
                                             <?= e($request["status"]) ?>
                                         </span>
@@ -351,7 +359,7 @@ $requests = $stmt->fetchAll();
                         <?php else: ?>
 
                             <tr>
-                                <td colspan="8" class="empty">
+                                <td colspan="9" class="empty">
                                     No matching requests found.
                                 </td>
                             </tr>

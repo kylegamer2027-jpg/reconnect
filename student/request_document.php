@@ -19,6 +19,7 @@ if ($_SESSION["role"] !== "student") {
 $error = "";
 $purpose = "";
 $additional_details = "";
+$requested_date = "";
 
 // Available document types
 $document_types = [
@@ -50,6 +51,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                               is_string($_POST["additional_details"] ?? null)
             ? trim($_POST["additional_details"])
             : "";
+        $requested_date = is_string($_POST["requested_date"] ?? null)
+            ? trim($_POST["requested_date"])
+            : "";
 
         if (!in_array($document_type, $document_types, true)) {
 
@@ -70,6 +74,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $error = "Please provide the purpose of your request.";
 
+        } elseif (
+            !preg_match("/^\d{4}-\d{2}-\d{2}$/", $requested_date)
+        ) {
+
+            $error = "Please select the date you want to receive the document.";
+
+        } elseif (
+            !checkdate(
+                (int)substr($requested_date, 5, 2),
+                (int)substr($requested_date, 8, 2),
+                (int)substr($requested_date, 0, 4)
+            )
+        ) {
+
+            $error = "Please select a valid document date.";
+
+        } elseif (
+            $requested_date < date("Y-m-d")
+        ) {
+
+            $error = "The document date cannot be in the past.";
+
         } else {
 
             try {
@@ -80,16 +106,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         user_id,
                         document_type,
                         quantity,
+                        requested_date,
                         purpose,
                         additional_details
                     )
-                    VALUES (?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 ");
 
                 $stmt->execute([
                     $_SESSION["user_id"],
                     $document_type,
                     $quantity,
+                    $requested_date,
                     $purpose,
                     $additional_details !== ""
                         ? $additional_details
@@ -285,6 +313,20 @@ $request_id = filter_var(
                             name="quantity"
                             min="1"
                             value="<?= e($_POST["quantity"] ?? "1") ?>"
+                            required
+                        >
+
+                        <br><br>
+
+                        <label for="requested_date">Date Needed</label>
+                        <br>
+
+                        <input
+                            type="date"
+                            id="requested_date"
+                            name="requested_date"
+                            min="<?= e(date("Y-m-d")) ?>"
+                            value="<?= e($_POST["requested_date"] ?? "") ?>"
                             required
                         >
 
